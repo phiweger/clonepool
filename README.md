@@ -1,3 +1,3 @@
 # clonepool
 
-![](sim.png)
+![](sim.png =250x)
