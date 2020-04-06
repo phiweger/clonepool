@@ -48,10 +48,11 @@ def set_up_pools(npools, nsamples, maxpool, nreplicates):
     return pool_log
 
 def sample_pos_samples(nsamples, npositive):
-    positive_samples = np.random.choice(
+    positive_samples_list = np.random.choice(
         np.arange(0, nsamples),
         size=npositive,
         replace=False)
+    positive_samples = set(positive_samples_list)
     return positive_samples
 
 def get_pos_pools(sample_map, positive_samples):
@@ -108,15 +109,15 @@ def simulate_pool(npools, nreplicates, maxpool, p):
     # is negative. If all pools the sample is in are positive, we cannot
     # resolve its state.
     # uncertain .. 1, resolved .. 0
-    state = defaultdict(int)
+    sample_state = defaultdict(int)
     for sample, pools in sample_map.items():
         # ..., 492: [33, 48, 68], ...
         if all([(pool in positive_pools) for pool in pools]):
-            state[sample] += 1
+            sample_state[sample] += 1
         else:
-            state[sample] += 0
+            sample_state[sample] += 0
     # TODO: all w/ 0 are negative, add to result
-    old = sum(state.values())
+    old = sum(sample_state.values())
     # print(f'{old} unresolved')
     # print(f'{old} samples cannot be resolved in first round')
 
@@ -129,17 +130,17 @@ def simulate_pool(npools, nreplicates, maxpool, p):
     # of unresolved samples converges (does not get smaller)
     while old > 0:
 
-        for sample, _ in state.items():
+        for sample in sample_state:
             sample_pools = sample_map[sample]
             # assert len(sample_pools) == nreplicates
 
             for pool in sample_pools:
-                s = [state[i] for i in pool_log[pool]]
+                s = [sample_state[i] for i in pool_log[pool]]
                 # if sum(s) > 0:
                 #     print(s)
                 if sum(s) == 1:
-                    state[sample] = 0
-        new = sum(state.values())
+                    sample_state[sample] = 0
+        new = sum(sample_state.values())
         # print(new)
         if new == old:  # convergence
             # TODO: Export network view of the remaining samples, i.e.
