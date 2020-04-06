@@ -164,7 +164,7 @@ ggplot(df, aes(x=p, y=spr, color=as.factor(nrep))) +
     facet_wrap(~maxpool, scale='free_y') +
     theme_classic() +
     geom_hline(yintercept=1) +
-    ylab('samples per reaction') +
+    ylab('resolved samples per reaction') +
     xlab('prevalence') +
     labs(color='replicates') +
     guides(color=guide_legend(override.aes=list(size=10)))
