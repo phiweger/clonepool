@@ -81,30 +81,7 @@ def make_sample_map(pool_log):
     #             sample_map[i].append(k)
     return sample_map
 
-
-def simulate_pool(npools, nreplicates, maxpool, p):
-
-    nsamples  = int(np.floor(maxpool * npools / nreplicates))
-    npositive = int(np.floor(p * nsamples))
-
-    # print(f'{nsamples} samples can be processed')
-    # print(f'{npositive} should be positive')
-
-    samples  = np.arange(0, nsamples)
-    pool_log = set_up_pools(npools, nsamples, maxpool, nreplicates)
-
-    # g = nx.Graph()
-    # g.add_nodes_from(samples)
-
-    # Simulate positive samples
-    positive_samples = sample_pos_samples(nsamples, npositive)
-
-    # Which pools become positive as a consequence?
-    sample_map     = make_sample_map(pool_log)
-    positive_pools = get_pos_pools(sample_map, positive_samples)
-
-    # Resolve
-
+def resolve_samples(pool_log, sample_map, positive_pools, nsamples, npools):
     # If any pool in which the sample is contained is negative, the sample
     # is negative. If all pools the sample is in are positive, we cannot
     # resolve its state.
@@ -157,6 +134,32 @@ def simulate_pool(npools, nreplicates, maxpool, p):
     # print(f'Can process {result} samples per reaction')
     # If this falls below 1, it makees sense to just test each sample
     # individually w/o pooling
+
+def simulate_pool(npools, nreplicates, maxpool, p):
+
+    nsamples  = int(np.floor(maxpool * npools / nreplicates))
+    npositive = int(np.floor(p * nsamples))
+
+    # print(f'{nsamples} samples can be processed')
+    # print(f'{npositive} should be positive')
+
+    samples  = np.arange(0, nsamples)
+    pool_log = set_up_pools(npools, nsamples, maxpool, nreplicates)
+
+    # g = nx.Graph()
+    # g.add_nodes_from(samples)
+
+    # Simulate positive samples
+    positive_samples = sample_pos_samples(nsamples, npositive)
+
+    # Which pools become positive as a consequence?
+    sample_map     = make_sample_map(pool_log)
+    positive_pools = get_pos_pools(sample_map, positive_samples)
+
+    # Resolve
+    result = resolve_samples(pool_log, sample_map, positive_pools, nsamples, npools)
+
+
     return result
 
 def simulation_step(index):
