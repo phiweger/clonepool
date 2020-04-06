@@ -7,7 +7,8 @@ from itertools import combinations
 
 import networkx as nx
 import numpy as np
-from tqdm import tqdm
+# from tqdm import tqdm
+from concurrent.futures import ProcessPoolExecutor
 
 
 # nsamples = 500
@@ -140,16 +141,40 @@ def simulate_pool(npools, nreplicates, maxpool, p):
     # individually w/o pooling
     return result
 
+def simulation_step(index):
+    print(f'starting iteration {index}')
+    csv_output = list()
+    for maxpool in [3, 5, 10, 20]:
+        for nrep in [1, 2, 3, 4, 5]:
+            for p in np.arange(0.01, 0.3, 0.01):
+                samples = simulate_pool(
+                    npools=94, nreplicates=nrep, maxpool=maxpool, p=p)
+                # spr .. samples per reactions
+                #out.write(f'{index},{maxpool},{nrep},{p},{samples}\n')
+                csv_output.append(f'{index},{maxpool},{nrep},{p},{samples}\n')
+    return csv_output
 
+# Compute output in parallel.
+# for i in tqdm(range(25)):
+csv_output = list()
+with ProcessPoolExecutor() as executor:
+    iter_count = 25
+    print(f'Executing {iter_count} simulation iterations ...')
+    for csv_output_of_run in executor.map(simulation_step, range(iter_count)):
+        csv_output.extend(csv_output_of_run)
+    # for maxpool in [3, 5, 10, 20]:
+    #     for nrep in [1, 2, 3, 4, 5]:
+    #         for p in np.arange(0.01, 0.3, 0.01):
+    #             samples = simulate_pool(
+    #                 npools=94, nreplicates=nrep, maxpool=maxpool, p=p)
+    #             # spr .. samples per reactions
+    #             out.write(f'{i},{maxpool},{nrep},{p},{samples}\n')
+
+# Write output to csv file.
+print('Writing output ... ',)
 with open('sim.csv', 'w+') as out:
-    for i in tqdm(range(25)):
-        for maxpool in [3, 5, 10, 20]:
-            for nrep in [1, 2, 3, 4, 5]:
-                for p in np.arange(0.01, 0.3, 0.01):
-                    samples = simulate_pool(
-                        npools=94, nreplicates=nrep, maxpool=maxpool, p=p)
-                    # spr .. samples per reactions
-                    out.write(f'{i},{maxpool},{nrep},{p},{samples}\n')
+    out.write("".join(csv_output))
+print('done.')
 
 
 '''r
