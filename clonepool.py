@@ -30,7 +30,7 @@ def simulate_pool(npools, nreplicates, maxpool, p):
     samples = np.arange(0, nsamples)
     pool_cnt = {k: maxpool for k in np.arange(0, npools)}
     pool_log = defaultdict(list)
-    
+
     # g = nx.Graph()
     # g.add_nodes_from(samples)
 
@@ -38,23 +38,23 @@ def simulate_pool(npools, nreplicates, maxpool, p):
     for i in samples:
         pool = []
         cnt = maxpool
-    
+
         try:
             address = np.random.choice(
                 list(pool_cnt.keys()), nreplicates, replace=False)
-    
+
             for pool in address:
                 pool_cnt[pool] -= 1
                 if pool_cnt[pool] == 0:
                     del pool_cnt[pool]
-    
-        except ValueError:  
+
+        except ValueError:
             # Cannot take a larger sample than population when 'replace=False'
             # Then random
             address = np.random.choice(
                 list(np.arange(0, npools)), size=nreplicates, replace=False)
             # consequence: some pools are larger than maxpool
-        
+
         for pool in address:
             # for node in pool_log[pool]:
             #     g.add_edge(i, node)
@@ -67,8 +67,8 @@ def simulate_pool(npools, nreplicates, maxpool, p):
         np.arange(0, nsamples),
         size=npositive,
         replace=False)
-    
-    
+
+
     # Which pools become positive as a consequence?
     positive_pools = set()
     for k, v in pool_log.items():
@@ -102,20 +102,20 @@ def simulate_pool(npools, nreplicates, maxpool, p):
     old = sum(state.values())
     # print(f'{old} unresolved')
     # print(f'{old} samples cannot be resolved in first round')
-    
+
     # Catch case where all is resolved straight away
     if old == 0:
         result = round(nsamples / npools, 4)
         return result
-    
+
     # If not all samples are resolved, iterate until they are or the number
     # of unresolved samples converges (does not get smaller)
     while old > 0:
-    
+
         for sample, _ in state.items():
             sample_pools = sample_map[sample]
             # assert len(sample_pools) == nreplicates
-            
+
             for pool in sample_pools:
                 s = [state[i] for i in pool_log[pool]]
                 # if sum(s) > 0:
@@ -183,9 +183,9 @@ library(readr)
 
 df <- read_csv('sim.csv', col_names=c('iter', 'maxpool', 'nrep', 'p', 'spr'))
 
-ggplot(df, aes(x=p, y=spr, color=as.factor(nrep))) + 
+ggplot(df, aes(x=p, y=spr, color=as.factor(nrep))) +
     geom_jitter(size=0.3) +
-    scale_color_brewer(palette='Set2') + 
+    scale_color_brewer(palette='Set2') +
     facet_wrap(~maxpool, scale='free_y') +
     theme_classic() +
     geom_hline(yintercept=1) +
