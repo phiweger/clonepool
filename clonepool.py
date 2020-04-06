@@ -157,7 +157,8 @@ def simulation_step(index):
 # Compute output in parallel.
 # for i in tqdm(range(25)):
 csv_output = list()
-with ProcessPoolExecutor() as executor:
+cpu_count = None                # use None to autodetect, and 1 to debug
+with ProcessPoolExecutor(max_workers=cpu_count) as executor:
     iter_count = 24
     print(f'Executing {iter_count} simulation iterations ...')
     for csv_output_of_run in executor.map(simulation_step, range(iter_count)):
