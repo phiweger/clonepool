@@ -169,6 +169,11 @@ def simulation_step(index):
                 csv_output.append(f'{index},{maxpool},{nrep},{p},{samples}\n')
     return csv_output
 
+
+##############################################################################
+##                                   Main                                   ##
+##############################################################################
+
 # Compute output in parallel.
 # for i in tqdm(range(25)):
 csv_output = list()
