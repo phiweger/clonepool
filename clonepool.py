@@ -158,7 +158,7 @@ def simulation_step(index):
 # for i in tqdm(range(25)):
 csv_output = list()
 with ProcessPoolExecutor() as executor:
-    iter_count = 25
+    iter_count = 24
     print(f'Executing {iter_count} simulation iterations ...')
     for csv_output_of_run in executor.map(simulation_step, range(iter_count)):
         csv_output.extend(csv_output_of_run)
