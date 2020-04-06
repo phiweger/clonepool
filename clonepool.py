@@ -44,6 +44,7 @@ def set_up_pools(npools, nsamples, maxpool, nreplicates):
             # for node in pool_log[pool]:
             #     g.add_edge(i, node)
             pool_log[pool].append(i)
+            # pool_log[pool].add(i)
 
     return pool_log
 
@@ -134,6 +135,36 @@ def resolve_samples(pool_log, sample_map, positive_pools, nsamples, npools):
     # print(f'Can process {result} samples per reaction')
     # If this falls below 1, it makees sense to just test each sample
     # individually w/o pooling
+
+def resolve_samples_felix(pool_log, sample_map, positive_pools, nsamples, npools):
+    sample_state = defaultdict(int(0))      # +1 == pos, -1 == neg
+    sample_queue = set(sample_map.keys())   # start with all samples
+    changed  = True
+    while changed:
+        changed = False
+        for sample in sample_queue:
+            sample_pools = sample_map[sample]
+            if any([(pool not in positive_pools) for pool in sample_pools]):
+                sample_state[sample] = -1               # sample is negative
+                sample_queue.remove(sample)
+                changed = True
+            else:       # all pools of sample are positive
+                # Check whether there is any pool where all other samples are
+                # known to be negative. Then this sample must be positive.
+                for sample_pool in sample_pools:
+                    other_samples = pool_log[sample_pool].copy().remove(sample)
+                    if all([sample_state[sample] == -1 for sample in other_samples]):
+                        sample_state[sample] = +1       # sample is positive
+                        sample_queue.remove(sample)
+                        changed = True
+                        break       # we know what we want to know
+
+    resolved  = sample_state.keys().length()
+    uncertain = nsamples - resolved
+
+    result = round(nsamples / (npools + uncertain), 4)
+
+
 
 def simulate_pool(npools, nreplicates, maxpool, p):
 
