@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 '''
 Address len 1 means npools fully connected graphs
 '''
