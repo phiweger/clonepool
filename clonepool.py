@@ -21,7 +21,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 def set_up_pools(npools, nsamples, maxpool, nreplicates):
     pool_cnt = {k: maxpool for k in np.arange(0, npools)} # how often each pool
-    pool_log = defaultdict(list)                # which sample in which pool?
+    pool_log = defaultdict(set)                # which sample in which pool?
 
     for i in range(nsamples):
         try:
@@ -43,8 +43,7 @@ def set_up_pools(npools, nsamples, maxpool, nreplicates):
         for pool in address:
             # for node in pool_log[pool]:
             #     g.add_edge(i, node)
-            pool_log[pool].append(i)
-            # pool_log[pool].add(i)
+            pool_log[pool].add(i)
 
     return pool_log
 
