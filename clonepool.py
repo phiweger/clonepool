@@ -17,28 +17,11 @@ from concurrent.futures import ProcessPoolExecutor
 # p = 0.1
 # npools = 94
 
+def set_up_pools(npools, nsamples, maxpool, nreplicates):
+    pool_cnt = {k: maxpool for k in np.arange(0, npools)} # how often each pool
+    pool_log = defaultdict(list)                # which sample in which pool?
 
-def simulate_pool(npools, nreplicates, maxpool, p):
-
-    nsamples  = int(np.floor(maxpool * npools / nreplicates))
-    npositive = int(np.floor(p * nsamples))
-    # maxpool = np.ceil(nreplicates * nsamples / npools)
-
-    # print(f'{nsamples} samples can be processed')
-    # print(f'{npositive} should be positive')
-
-    samples = np.arange(0, nsamples)
-    pool_cnt = {k: maxpool for k in np.arange(0, npools)}
-    pool_log = defaultdict(list)
-
-    # g = nx.Graph()
-    # g.add_nodes_from(samples)
-
-    # Set up pools
-    for i in samples:
-        pool = []
-        cnt = maxpool
-
+    for i in range(nsamples):
         try:
             address = np.random.choice(
                 list(pool_cnt.keys()), nreplicates, replace=False)
@@ -60,44 +43,76 @@ def simulate_pool(npools, nreplicates, maxpool, p):
             #     g.add_edge(i, node)
             pool_log[pool].append(i)
 
+    return pool_log
 
-
-    # Simulate positive samples
+def sample_pos_samples(nsamples, npositive):
     positive_samples = np.random.choice(
         np.arange(0, nsamples),
         size=npositive,
         replace=False)
+    return positive_samples
 
+def get_pos_pools(sample_map, positive_samples):
+    positive_pools = set()
+    for positive_sample in positive_samples:
+        for pool in sample_map[positive_sample]:
+            positive_pools.add(pool)
+    # positive_pools = set()
+    # for k, v in pool_log.items():
+    #     # Samples 0 throuugh 19 are Ccov positive (0.02)
+    #     for i in positive_samples:
+    #         if i in v:
+    #             positive_pools.add(k)
+    # # print(f'{len(positive_pools)} pools are positive ({round(len(positive_pools) / npools, 4)})')
+    return positive_pools
+
+def make_sample_map(pool_log):
+    sample_map = defaultdict(set)
+    for pool, samples in pool_log.items():
+        for sample in samples:
+            sample_map[sample].add(pool)
+    # sample_map = defaultdict(list)
+    # for i in samples:
+    #     for k, v in pool_log.items():
+    #         if i in v:
+    #             sample_map[i].append(k)
+    return sample_map
+
+
+def simulate_pool(npools, nreplicates, maxpool, p):
+
+    nsamples  = int(np.floor(maxpool * npools / nreplicates))
+    npositive = int(np.floor(p * nsamples))
+
+    # print(f'{nsamples} samples can be processed')
+    # print(f'{npositive} should be positive')
+
+    samples  = np.arange(0, nsamples)
+    pool_log = set_up_pools(npools, nsamples, maxpool, nreplicates)
+
+    # g = nx.Graph()
+    # g.add_nodes_from(samples)
+
+    # Simulate positive samples
+    positive_samples = sample_pos_samples(nsamples, npositive)
 
     # Which pools become positive as a consequence?
-    positive_pools = set()
-    for k, v in pool_log.items():
-        # Samples 0 throuugh 19 are Ccov positive (0.02)
-        for i in positive_samples:
-            if i in v:
-                positive_pools.add(k)
-    # print(f'{len(positive_pools)} pools are positive ({round(len(positive_pools) / npools, 4)})')
-
+    sample_map     = make_sample_map(pool_log)
+    positive_pools = get_pos_pools(sample_map, positive_samples)
 
     # Resolve
-    sample_map = defaultdict(list)
-    for i in samples:
-        for k, v in pool_log.items():
-            if i in v:
-                sample_map[i].append(k)
-
 
     # If any pool in which the sample is contained is negative, the sample
     # is negative. If all pools the sample is in are positive, we cannot
     # resolve its state.
     # uncertain .. 1, resolved .. 0
     state = defaultdict(int)
-    for k, v in sample_map.items():
+    for sample, pools in sample_map.items():
         # ..., 492: [33, 48, 68], ...
-        if all([(i in positive_pools) for i in v]):
-            state[k] += 1
+        if all([(pool in positive_pools) for pool in pools]):
+            state[sample] += 1
         else:
-            state[k] += 0
+            state[sample] += 0
     # TODO: all w/ 0 are negative, add to result
     old = sum(state.values())
     # print(f'{old} unresolved')
