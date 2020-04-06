@@ -135,6 +135,7 @@ def resolve_samples(pool_log, sample_map, positive_pools, nsamples, npools):
     # print(f'Can process {result} samples per reaction')
     # If this falls below 1, it makees sense to just test each sample
     # individually w/o pooling
+    return result
 
 def resolve_samples_felix(pool_log, sample_map, positive_pools, nsamples, npools):
     sample_state = defaultdict(int(0))      # +1 == pos, -1 == neg
