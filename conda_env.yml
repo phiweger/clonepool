@@ -1,0 +1,15 @@
+name: clonepool
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python
+  - networkx
+  - numpy
+  - tqdm
+  - r-readr
+  - r
+  - r-ggplot2
+prefix: /home/felix/miniconda3/envs/clonepool
+
