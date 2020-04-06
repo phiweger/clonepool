@@ -20,7 +20,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 def simulate_pool(npools, nreplicates, maxpool, p):
 
-    nsamples = int(maxpool * npools / nreplicates)
+    nsamples  = int(np.floor(maxpool * npools / nreplicates))
     npositive = int(np.floor(p * nsamples))
     # maxpool = np.ceil(nreplicates * nsamples / npools)
 
