@@ -137,33 +137,33 @@ def resolve_samples(pool_log, sample_map, positive_pools, nsamples, npools):
     return result
 
 def resolve_samples_felix(pool_log, sample_map, positive_pools, nsamples, npools):
-    sample_state = defaultdict(int(0))      # +1 == pos, -1 == neg
-    sample_queue = set(sample_map.keys())   # start with all samples
-    changed  = True
-    while changed:
-        changed = False
+    sample_state     = defaultdict(int)         # +1 == pos, -1 == neg
+    sample_queue     = set(sample_map.keys())   # start with all samples
+    resolved_samples = set([1])                 # per iteration, start non-empty
+    while len(resolved_samples) > 0:
+        resolved_samples = set([])              # empty set
         for sample in sample_queue:
             sample_pools = sample_map[sample]
             if any([(pool not in positive_pools) for pool in sample_pools]):
                 sample_state[sample] = -1               # sample is negative
-                sample_queue.remove(sample)
-                changed = True
+                resolved_samples.add(sample)
             else:       # all pools of sample are positive
                 # Check whether there is any pool where all other samples are
                 # known to be negative. Then this sample must be positive.
                 for sample_pool in sample_pools:
-                    other_samples = pool_log[sample_pool].copy().remove(sample)
+                    other_samples = pool_log[sample_pool].copy()
+                    other_samples.remove(sample)
                     if all([sample_state[sample] == -1 for sample in other_samples]):
                         sample_state[sample] = +1       # sample is positive
-                        sample_queue.remove(sample)
-                        changed = True
+                        resolved_samples.add(sample)
                         break       # we know what we want to know
+        sample_queue -= resolved_samples        # remove resolved from queue
 
-    resolved  = sample_state.keys().length()
-    uncertain = nsamples - resolved
+    nresolved  = len([s for s, state in sample_state.items() if state != 0])
+    nuncertain = nsamples - nresolved
 
-    result = round(nsamples / (npools + uncertain), 4)
-
+    result = round(nsamples / (npools + nuncertain), 4)
+    return result
 
 
 def simulate_pool(npools, nreplicates, maxpool, p):
@@ -188,7 +188,8 @@ def simulate_pool(npools, nreplicates, maxpool, p):
     positive_pools = get_pos_pools(sample_map, positive_samples)
 
     # Resolve
-    result = resolve_samples(pool_log, sample_map, positive_pools, nsamples, npools)
+    result = resolve_samples(    pool_log, sample_map, positive_pools, nsamples, npools)
+    # result = resolve_samples_felix(pool_log, sample_map, positive_pools, nsamples, npools)
 
 
     return result
@@ -196,7 +197,7 @@ def simulate_pool(npools, nreplicates, maxpool, p):
 def simulation_step(index):
     print(f'starting iteration {index}')
     csv_output = list()
-    for maxpool in [3, 5, 10, 20]:
+    for maxpool in [3, 5, 10, 20, 30, 40]:
         for nrep in [1, 2, 3, 4, 5]:
             for p in np.arange(0.01, 0.3, 0.01):
                 samples = simulate_pool(
@@ -219,14 +220,9 @@ with ProcessPoolExecutor(max_workers=cpu_count) as executor:
     iter_count = 24
     print(f'Executing {iter_count} simulation iterations ...')
     for csv_output_of_run in executor.map(simulation_step, range(iter_count)):
+    # for i in range(iter_count):                   # use for debugging
+    #     csv_output_of_run = simulation_step(i)
         csv_output.extend(csv_output_of_run)
-    # for maxpool in [3, 5, 10, 20]:
-    #     for nrep in [1, 2, 3, 4, 5]:
-    #         for p in np.arange(0.01, 0.3, 0.01):
-    #             samples = simulate_pool(
-    #                 npools=94, nreplicates=nrep, maxpool=maxpool, p=p)
-    #             # spr .. samples per reactions
-    #             out.write(f'{i},{maxpool},{nrep},{p},{samples}\n')
 
 # Write output to csv file.
 print('Writing output ... ',)
