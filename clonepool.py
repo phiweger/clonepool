@@ -137,27 +137,30 @@ def resolve_samples(pool_log, sample_map, positive_pools, nsamples, npools):
     return result
 
 def resolve_samples_felix(pool_log, sample_map, positive_pools, nsamples, npools):
-    sample_state     = defaultdict(int)         # +1 == pos, -1 == neg
-    sample_queue     = set(sample_map.keys())   # start with all samples
-    resolved_samples = set([1])                 # per iteration, start non-empty
-    while len(resolved_samples) > 0:
-        resolved_samples = set([])              # empty set
-        for sample in sample_queue:
-            sample_pools = sample_map[sample]
-            if any([(pool not in positive_pools) for pool in sample_pools]):
-                sample_state[sample] = -1               # sample is negative
-                resolved_samples.add(sample)
-            else:       # all pools of sample are positive
-                # Check whether there is any pool where all other samples are
-                # known to be negative. Then this sample must be positive.
-                for sample_pool in sample_pools:
-                    other_samples = pool_log[sample_pool].copy()
-                    other_samples.remove(sample)
-                    if all([sample_state[sample] == -1 for sample in other_samples]):
-                        sample_state[sample] = +1       # sample is positive
-                        resolved_samples.add(sample)
-                        break       # we know what we want to know
-        sample_queue -= resolved_samples        # remove resolved from queue
+    # Sample state: 0 == uncertain, +1 == pos, -1 == neg
+    sample_state = {sample: 0 for sample in sample_map}
+
+    # First, mark all samples from negative pools as negative.
+    for pool, samples in pool_log.items():
+        if pool not in positive_pools:
+            for sample in samples:
+                sample_state[sample] = -1               # negative
+
+    # Now, detect positives: only possible if exactly one sample in the pool
+    # is uncertain and all others are negative.
+    for pool, samples in pool_log.items():
+        if pool in positive_pools:
+            uncertain_samples = [s for s in samples if sample_state[s] == 0]
+            if len(uncertain_samples) == 1:
+                sample_state[uncertain_samples[0]] = +1         # positive
+
+    # There is no iterative refinement. All negative samples can be detected
+    # by looking at negative pools. Since the pools don't change their state,
+    # no others will be found. Even detecting a positive sample will not help:
+    # if there is another uncertain sample alongside a positive sample, it
+    # could be either positive or negative.
+    # For positive samples, it's the same. Detecting a positive sample cannot
+    # yield new information to detect other positive samples.
 
     nresolved  = len([s for s, state in sample_state.items() if state != 0])
     nuncertain = nsamples - nresolved
@@ -188,8 +191,8 @@ def simulate_pool(npools, nreplicates, maxpool, p):
     positive_pools = get_pos_pools(sample_map, positive_samples)
 
     # Resolve
-    result = resolve_samples(    pool_log, sample_map, positive_pools, nsamples, npools)
-    # result = resolve_samples_felix(pool_log, sample_map, positive_pools, nsamples, npools)
+    # result = resolve_samples(    pool_log, sample_map, positive_pools, nsamples, npools)
+    result = resolve_samples_felix(pool_log, sample_map, positive_pools, nsamples, npools)
 
 
     return result
