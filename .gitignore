@@ -140,3 +140,6 @@ ENV/
 
 # vim
 .*.swp
+
+# R
+.Rhistory
