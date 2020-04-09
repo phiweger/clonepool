@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-
-'''
-Address len 1 means npools fully connected graphs
-'''
-
 from collections import defaultdict, Counter
 from itertools import combinations
 
@@ -48,12 +42,10 @@ def set_up_pools(npools, nsamples, maxpool, nreplicates):
     return pool_log
 
 def sample_pos_samples(nsamples, npositive):
-    positive_samples_list = np.random.choice(
+    return np.random.choice(
         np.arange(0, nsamples),
         size=npositive,
         replace=False)
-    positive_samples = set(positive_samples_list)
-    return positive_samples
 
 def get_pos_pools(sample_map, positive_samples):
     positive_pools = set()
@@ -192,10 +184,10 @@ def simulate_pool(npools, nreplicates, maxpool, p):
 
     # Resolve
     # result = resolve_samples(    pool_log, sample_map, positive_pools, nsamples, npools)
-    result = resolve_samples_felix(pool_log, sample_map, positive_pools, nsamples, npools)
+    
+    # result = resolve_samples_felix(pool_log, sample_map, positive_pools, nsamples, npools)
+    return positive_pools
 
-
-    return result
 
 def simulation_step(index):
     print(f'starting iteration {index}')
@@ -209,48 +201,3 @@ def simulation_step(index):
                 #out.write(f'{index},{maxpool},{nrep},{p},{samples}\n')
                 csv_output.append(f'{index},{maxpool},{nrep},{p},{samples}\n')
     return csv_output
-
-
-##############################################################################
-##                                   Main                                   ##
-##############################################################################
-
-# Compute output in parallel.
-# for i in tqdm(range(25)):
-csv_output = list()
-cpu_count = None                # use None to autodetect, and 1 to debug
-with ProcessPoolExecutor(max_workers=cpu_count) as executor:
-    iter_count = 24
-    print(f'Executing {iter_count} simulation iterations ...')
-    for csv_output_of_run in executor.map(simulation_step, range(iter_count)):
-    # for i in range(iter_count):                   # use for debugging
-    #     csv_output_of_run = simulation_step(i)
-        csv_output.extend(csv_output_of_run)
-
-# Write output to csv file.
-print('Writing output ... ',)
-with open('sim.csv', 'w+') as out:
-    out.write("".join(csv_output))
-print('done.')
-
-
-'''r
-library(ggplot2)
-library(readr)
-
-df <- read_csv('sim.csv', col_names=c('iter', 'maxpool', 'nrep', 'p', 'spr'))
-
-ggplot(df, aes(x=p, y=spr, color=as.factor(nrep))) +
-    geom_jitter(size=0.3) +
-    scale_color_brewer(palette='Set2') +
-    facet_wrap(~maxpool, scale='free_y') +
-    theme_classic() +
-    geom_hline(yintercept=1) +
-    ylab('resolved samples per reaction') +
-    xlab('prevalence') +
-    labs(color='replicates') +
-    guides(color=guide_legend(override.aes=list(size=10)))
-
-ggsave('sim.pdf', width=12, height=10, units='cm')
-'''
-

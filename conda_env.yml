@@ -4,12 +4,10 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - python
+  - python=3.7
+  - click
   - networkx
   - numpy
   - tqdm
   - r-readr
-  - r
   - r-ggplot2
-prefix: /home/felix/miniconda3/envs/clonepool
-

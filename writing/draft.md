@@ -90,7 +90,8 @@ Increasing screening capacity for SARS-CoV-2 RT-PCR using pool addresses
 
 ### Abstract
 
-Here we report a protocol for pooling samples that increases the number of samples that can be processed compared to one-sample-per-tube testing by a factor of up to 10 or more. Unlike other protocols, no second PCR to resolve the status of individual samples in a positive pool is required. This is achieved through the newly introduced concept of a pool address: Each sample is present in multiple pools, which allows resolution of the testing status even though it has not been tested individually.
+Here we report a protocol for pooling samples that increases the number of samples that can be processed compared to one-sample-per-tube testing by multiples. This is achieved through the newly introduced concept of a _pool address_: Each sample is present in multiple pools, which allows resolution of the testing status even though it has not been tested individually. Target prevalence and the desired pool size determine which address length is optimal. This pooling protocol allows pooling to be effective even at a high target prevalence where previous approaches become ineffective.
+
 
 ### Main text
 
