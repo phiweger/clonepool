@@ -3,12 +3,13 @@
 '''
 Address len 1 means w fully connected graphs
 '''
+from collections import defaultdict
 import sys
 
 import click
 import numpy as np
 
-from clonepool.utils import set_up_pools, simulate_pool
+from clonepool.utils import set_up_pools, simulate_pool, resolve_samples
 
 
 ##############################################################################
@@ -72,11 +73,11 @@ print('done.')
     '-w', '--pool-count', default=94, type=int,
     help='Number of pools [94]')
 @click.option(
-    '-o', '--layout', required=True, default='layout.csv',
+    '-o', '--layout', required=True, default='layout',
     help='Path to layout')
 @click.option(
-    '--simulate', default=None,
-    help='Path to +/- simulated pool results')
+    '--simulate', is_flag=True,
+    help='Simulate pool results')
 def layout(prevalence, pool_size, pool_count, replicates, samples, layout, simulate):
     
     max_sample_support = int(np.floor((pool_size * pool_count) / replicates))
@@ -86,28 +87,76 @@ def layout(prevalence, pool_size, pool_count, replicates, samples, layout, simul
     
     pool_log = set_up_pools(pool_count, samples, pool_size, replicates)
 
-    if simulate:
-        positive_pools = simulate_pool(
-            pool_count, replicates, pool_size, prevalence)
-        
-        with open(simulate, 'w+') as file:
-            file.write('pool,result\n')
-            state = ['+' if (k in positive_pools) else '-' for k in pool_log]
-            for pool, s in zip(pool_log.keys(), state):
-                file.write(f'{pool},{s}\n') 
-
     with open(layout, 'w+') as file:
-        file.write('sample,pool\n')
-        for k, v in pool_log.items():
-            for i in v:
-                file.write(f'{i},{k}\n')
+        file.write('pool\tresult\tsamples\n')  # header
+
+        if simulate:
+            positive_pools = simulate_pool(
+                pool_count, replicates, pool_size, prevalence)
+        
+            state = ['+' if (k in positive_pools) else '-' for k in pool_log]
+            for (k, v), s in zip(pool_log.items(), state):
+                file.write(
+                    f'{k}\t{s}\t{",".join([str(i) for i in sorted(v)])}\n')
+
+        else:
+            for k, v in sorted(pool_log.items()):
+                file.write(
+                    f'{k}\t-\t{",".join([str(i) for i in sorted(v)])}\n')
 
 
 @click.command()
-def resolve():
-    # TODO evaluate flag
-    # result = resolve_samples_felix(pool_log, sample_map, positive_pools, nsamples, npools)
-    print('foo')
+@click.option(
+    '--layout', default=None,
+    help='Path to +/- pool results')
+@click.option(
+    '--result', default=None,
+    help='Path to +/- sample results')
+def resolve(layout, result):
+    pool_log = defaultdict(list)    # pool: [samples]
+    sample_map = defaultdict(list)  # sample: [pools]
+    positive_pools = []
+
+    with open(layout, 'r') as file:
+        _ = next(file)  # header
+        for line in file:
+            pool, state, samples = line.strip().split('\t')
+            samples = samples.split(',')
+
+            if state == '+':
+                positive_pools.append(pool)
+
+            pool_log[pool].extend(samples)
+
+            for i in samples:
+                sample_map[i].append(pool)
+
+    effective_samples, states = resolve_samples(
+        pool_log, sample_map, positive_pools, len(sample_map), len(pool_log))
+    print(f'Effective number of samples: {effective_samples}')
+    
+    with open(result, 'w+') as out:
+        out.write('sample\tresult\n')
+        # TODO: sort items?
+        for i, j in states.items():
+            if j == -1:
+                out.write(f'{i}\t-\n')
+            elif j == 0:
+                out.write(f'{i}\tNA\n')
+            elif j == 1:
+                out.write(f'{i}\t+\n')
+            else:
+                print('Something weird just happend')
+                sys.exit(-1)
+
+
+
+
+
+
+
+
+
 
 
 # if __name__ == '__main__':
