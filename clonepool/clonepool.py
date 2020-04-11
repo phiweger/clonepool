@@ -65,7 +65,7 @@ print('done.')
 #     '-o', '--layout', required=True, default='layout',
 #     help='File to which the generated layout is written')
 @click.argument(
-    'layout_file', required=False, default='-', type=click.File('w+'))
+    'layout_file', required=False, default='-', type=click.File('w'))
 @click.option(
     '--simulate', '-s', is_flag=True,
     help='Simulate pool results from random samples')
@@ -138,7 +138,7 @@ def resolve(layout, result):
         pool_log, sample_map, positive_pools, len(sample_map), len(pool_log))
     print(f'Effective number of samples: {effective_samples}')
 
-    with open(result, 'w+') as out:
+    with open(result, 'w') as out:
         out.write('sample\tresult\n')
         # TODO: sort items?
         for i, j in states.items():
