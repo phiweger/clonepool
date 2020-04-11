@@ -90,7 +90,8 @@ def layout(prevalence, pool_size, pool_count, replicates, samples, layout_file, 
 
     if simulate:
         positive_pools = simulate_pools(
-            pool_count, replicates, pool_size, prevalence)
+            pool_log, samples, prevalence)
+            # pool_count, replicates, pool_size, prevalence)
 
         state = ['+' if (k in positive_pools) else '-' for k in pool_log]
         for (k, v), s in sorted(zip(pool_log.items(), state)):

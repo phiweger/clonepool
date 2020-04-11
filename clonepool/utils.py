@@ -95,17 +95,14 @@ def resolve_samples(pool_log, sample_map, positive_pools, nsamples, npools):
     return result, sample_state
 
 
-def simulate_pools(npools, nreplicates, maxpool, p):
+def simulate_pools(pool_log, nsamples, prev):
+    '''
+    Given a pool--sample map, the number of samples, and a sample
+    prevalence, draw positive samples randomly according to their
+    prevalence and determine the positive pools from them.
+    '''
 
-    nsamples  = int(np.floor(maxpool * npools / nreplicates))
-    # npositive = int(np.floor(p * nsamples))
-    npositive = int(np.round(p * nsamples))
-
-    # print(f'{nsamples} samples can be processed')
-    # print(f'{npositive} should be positive')
-
-    samples  = np.arange(0, nsamples)
-    pool_log = set_up_pools(npools, nsamples, maxpool, nreplicates)
+    npositive = int(np.round(prev * nsamples))
 
     # g = nx.Graph()
     # g.add_nodes_from(samples)
@@ -117,10 +114,6 @@ def simulate_pools(npools, nreplicates, maxpool, p):
     sample_map     = make_sample_map(pool_log)
     positive_pools = get_pos_pools(sample_map, positive_samples)
 
-    # Resolve
-    # result = resolve_samples(    pool_log, sample_map, positive_pools, nsamples, npools)
-
-    # result = resolve_samples_felix(pool_log, sample_map, positive_pools, nsamples, npools)
     return positive_pools
 
 
@@ -130,8 +123,13 @@ def simulation_step(index):
     for maxpool in [3, 5, 10, 20, 30, 40]:
         for nrep in [1, 2, 3, 4, 5]:
             for p in np.arange(0.01, 0.3, 0.01):
-                samples = simulate_pools(
-                    npools=94, nreplicates=nrep, maxpool=maxpool, p=p)
+                # WARNING: THIS IS UNTESTED with the new code.
+                pool_log = set_up_pools(npools, nsamples, maxpool, nreplicates)
+                positive_pools = simulate_pools(pool_log, nsamples, p)
+                sample_map = make_sample_map(pool_log)
+                samples, states = resolve_samples(
+                        pool_log, sample_map, positive_pools, nsamples, npools)
+                    #npools=94, nreplicates=nrep, maxpool=maxpool, p=p)
                 # spr .. samples per reactions
                 #out.write(f'{index},{maxpool},{nrep},{p},{samples}\n')
                 csv_output.append(f'{index},{maxpool},{nrep},{p},{samples}\n')
