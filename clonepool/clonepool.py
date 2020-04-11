@@ -106,7 +106,7 @@ def layout(prevalence, pool_size, pool_count, replicates, samples, layout_file, 
 
 @click.command()
 @click.option(
-    '--layout', default=None,
+    '--layout', required=True, type=click.File('r'),
     help='Path to layout file containing +/- pool results')
 # @click.option(
 #     '--result', default=None,
@@ -123,24 +123,26 @@ def resolve(layout, sample_results_file):
     sample_map = defaultdict(set)  # sample: [pools]
     positive_pools = set()
 
-    with open(layout, 'r') as file:
-        _ = next(file)  # header
-        for line in file:
-            pool, state, samples = line.strip().split('\t')
-            samples = samples.split(',')
+    # Read layout / pool results file.
+    _ = next(layout)  # header
+    for line in layout:
+        pool, state, samples = line.strip().split('\t')
+        samples = samples.split(',')
 
-            if state == '+':
-                positive_pools.add(pool)
+        if state == '+':
+            positive_pools.add(pool)
 
-            pool_log[pool].update(samples)
+        pool_log[pool].update(samples)
 
-            for i in samples:
-                sample_map[i].add(pool)
+        for i in samples:
+            sample_map[i].add(pool)
 
+    # Resolve samples.
     effective_samples, states = resolve_samples(
         pool_log, sample_map, positive_pools, len(sample_map), len(pool_log))
     print(f'Effective number of samples: {effective_samples}')
 
+    # Print / write results.
     sample_results_file.write('sample\tresult\n')
     # TODO: sort items?
     for i, j in states.items():
