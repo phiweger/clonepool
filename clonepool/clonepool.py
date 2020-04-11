@@ -144,14 +144,13 @@ def resolve(layout, sample_results_file):
 
     # Print / write results.
     sample_results_file.write('sample\tresult\n')
-    # TODO: sort items?
-    for i, j in states.items():
-        if j == -1:
-            sample_results_file.write(f'{i}\t-\n')
-        elif j == 0:
-            sample_results_file.write(f'{i}\tNA\n')
-        elif j == 1:
-            sample_results_file.write(f'{i}\t+\n')
+    for sample, state in sorted(states.items()):
+        if state == -1:
+            sample_results_file.write(f'{sample}\t-\n')
+        elif state  == 0:
+            sample_results_file.write(f'{sample}\tNA\n')
+        elif state  == 1:
+            sample_results_file.write(f'{sample}\t+\n')
         else:
             print('The state of a pool should be -1, 0 or 1 -- it is neither. This should not have happened, please open an issue so we can find out why this happens.')
             sys.exit(-1)
