@@ -17,12 +17,8 @@ from clonepool.utils import set_up_pools, simulate_pool, resolve_samples
 ##############################################################################
 
 
-
 # Compute layoutput in parallel.
 # for i in tqdm(range(25)):
-
-
-
 
 '''
 csv_layoutput = list()
@@ -48,14 +44,10 @@ print('done.')
 # -p, --prevalence: prevalence of condition in samples [0.05]
 # -P, --pool-size: number of samples per pool
 # -m, --pool-count: total number of pools to be tested [94]
-# -l, --laylayout: path to pool laylayout file specifying the assignment of 
+# -l, --laylayout: path to pool laylayout file specifying the assignment of
 #               samples to pools (TODO description of format)
-# -r, --pool-results: path to the file containing the positive / negative 
+# -r, --pool-results: path to the file containing the positive / negative
 #               test result for each pool (TODO description of format)
-
-
-
-
 @click.command()
 @click.option(
     '-n', '--samples', required=True, type=int,
@@ -79,12 +71,12 @@ print('done.')
     '--simulate', is_flag=True,
     help='Simulate pool results')
 def layout(prevalence, pool_size, pool_count, replicates, samples, layout, simulate):
-    
+
     max_sample_support = int(np.floor((pool_size * pool_count) / replicates))
-    
+
     assert samples <= max_sample_support, \
     f'The chosen parameters support a maximum of {max_sample_support} samples'
-    
+
     pool_log = set_up_pools(pool_count, samples, pool_size, replicates)
 
     with open(layout, 'w+') as file:
@@ -93,7 +85,7 @@ def layout(prevalence, pool_size, pool_count, replicates, samples, layout, simul
         if simulate:
             positive_pools = simulate_pool(
                 pool_count, replicates, pool_size, prevalence)
-        
+
             state = ['+' if (k in positive_pools) else '-' for k in pool_log]
             for (k, v), s in zip(pool_log.items(), state):
                 file.write(
@@ -134,7 +126,7 @@ def resolve(layout, result):
     effective_samples, states = resolve_samples(
         pool_log, sample_map, positive_pools, len(sample_map), len(pool_log))
     print(f'Effective number of samples: {effective_samples}')
-    
+
     with open(result, 'w+') as out:
         out.write('sample\tresult\n')
         # TODO: sort items?
@@ -150,19 +142,11 @@ def resolve(layout, result):
                 sys.exit(-1)
 
 
-
-
-
-
-
-
-
-
-
 # if __name__ == '__main__':
 #     laylayout()
 
 
+# Plot data using R / GGplot
 '''r
 library(ggplot2)
 library(readr)

@@ -52,13 +52,6 @@ def get_pos_pools(sample_map, positive_samples):
     for positive_sample in positive_samples:
         for pool in sample_map[positive_sample]:
             positive_pools.add(pool)
-    # positive_pools = set()
-    # for k, v in pool_log.items():
-    #     # Samples 0 throuugh 19 are Ccov positive (0.02)
-    #     for i in positive_samples:
-    #         if i in v:
-    #             positive_pools.add(k)
-    # # print(f'{len(positive_pools)} pools are positive ({round(len(positive_pools) / npools, 4)})')
     return positive_pools
 
 def make_sample_map(pool_log):
@@ -66,11 +59,6 @@ def make_sample_map(pool_log):
     for pool, samples in pool_log.items():
         for sample in samples:
             sample_map[sample].add(pool)
-    # sample_map = defaultdict(list)
-    # for i in samples:
-    #     for k, v in pool_log.items():
-    #         if i in v:
-    #             sample_map[i].append(k)
     return sample_map
 
 
@@ -130,7 +118,7 @@ def simulate_pool(npools, nreplicates, maxpool, p):
 
     # Resolve
     # result = resolve_samples(    pool_log, sample_map, positive_pools, nsamples, npools)
-    
+
     # result = resolve_samples_felix(pool_log, sample_map, positive_pools, nsamples, npools)
     return positive_pools
 
