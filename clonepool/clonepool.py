@@ -9,7 +9,7 @@ import sys
 import click
 import numpy as np
 
-from clonepool.utils import set_up_pools, simulate_pool, resolve_samples
+from clonepool.utils import set_up_pools, simulate_pools, resolve_samples
 
 
 ##############################################################################
@@ -89,11 +89,11 @@ def layout(prevalence, pool_size, pool_count, replicates, samples, layout_file, 
     layout_file.write('pool\tresult\tsamples\n')  # header
 
     if simulate:
-        positive_pools = simulate_pool(
+        positive_pools = simulate_pools(
             pool_count, replicates, pool_size, prevalence)
 
         state = ['+' if (k in positive_pools) else '-' for k in pool_log]
-        for (k, v), s in zip(pool_log.items(), state):
+        for (k, v), s in sorted(zip(pool_log.items(), state)):
             layout_file.write(
                 f'{k}\t{s}\t{",".join([str(i) for i in sorted(v)])}\n')
 

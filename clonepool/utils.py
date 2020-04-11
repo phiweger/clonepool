@@ -95,7 +95,7 @@ def resolve_samples(pool_log, sample_map, positive_pools, nsamples, npools):
     return result, sample_state
 
 
-def simulate_pool(npools, nreplicates, maxpool, p):
+def simulate_pools(npools, nreplicates, maxpool, p):
 
     nsamples  = int(np.floor(maxpool * npools / nreplicates))
     npositive = int(np.floor(p * nsamples))
@@ -129,7 +129,7 @@ def simulation_step(index):
     for maxpool in [3, 5, 10, 20, 30, 40]:
         for nrep in [1, 2, 3, 4, 5]:
             for p in np.arange(0.01, 0.3, 0.01):
-                samples = simulate_pool(
+                samples = simulate_pools(
                     npools=94, nreplicates=nrep, maxpool=maxpool, p=p)
                 # spr .. samples per reactions
                 #out.write(f'{index},{maxpool},{nrep},{p},{samples}\n')
