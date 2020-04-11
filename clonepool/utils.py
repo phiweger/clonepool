@@ -98,7 +98,8 @@ def resolve_samples(pool_log, sample_map, positive_pools, nsamples, npools):
 def simulate_pools(npools, nreplicates, maxpool, p):
 
     nsamples  = int(np.floor(maxpool * npools / nreplicates))
-    npositive = int(np.floor(p * nsamples))
+    # npositive = int(np.floor(p * nsamples))
+    npositive = int(np.round(p * nsamples))
 
     # print(f'{nsamples} samples can be processed')
     # print(f'{npositive} should be positive')
