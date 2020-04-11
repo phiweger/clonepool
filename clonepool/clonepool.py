@@ -56,23 +56,26 @@ print('done.')
     '-r', '--replicates', default=2, type=int,
     help='Number of replicates per sample [2]')
 @click.option(
-    '-p', '--prevalence', default=0.05, type=float,
-    help='Expected prevalence [0.05]')
-@click.option(
     '-P', '--pool-size', required=True, type=int,
     help='How many samples go into each pool')
 @click.option(
     '-w', '--pool-count', default=94, type=int,
-    help='Number of pools [94]')
+    help='Number of pools (wells) [94]')
+# @click.option(
+#     '-o', '--layout', required=True, default='layout',
+#     help='File to which the generated layout is written')
+@click.argument(
+    'layout_file', required=False, default='-', type=click.File('w+'))
 @click.option(
-    '-o', '--layout', required=True, default='layout',
-    help='Path to layout file')
+    '--simulate', '-s', is_flag=True,
+    help='Simulate pool results from random samples')
 @click.option(
-    '--simulate', is_flag=True,
-    help='Simulate pool results')
-def layout(prevalence, pool_size, pool_count, replicates, samples, layout, simulate):
+    '-p', '--prevalence', default=0.05, type=float,
+    help='Sample prevalence used for simulation [0.05]')
+def layout(prevalence, pool_size, pool_count, replicates, samples, layout_file, simulate):
     '''
     Generate pool layout. This assigns all samples to their respecitve pools.
+    Writes to STDOUT or the given layout file.
     '''
 
     max_sample_support = int(np.floor((pool_size * pool_count) / replicates))
@@ -82,22 +85,22 @@ def layout(prevalence, pool_size, pool_count, replicates, samples, layout, simul
 
     pool_log = set_up_pools(pool_count, samples, pool_size, replicates)
 
-    with open(layout, 'w+') as file:
-        file.write('pool\tresult\tsamples\n')  # header
+    # with open(layout, 'w+') as file:
+    layout_file.write('pool\tresult\tsamples\n')  # header
 
-        if simulate:
-            positive_pools = simulate_pool(
-                pool_count, replicates, pool_size, prevalence)
+    if simulate:
+        positive_pools = simulate_pool(
+            pool_count, replicates, pool_size, prevalence)
 
-            state = ['+' if (k in positive_pools) else '-' for k in pool_log]
-            for (k, v), s in zip(pool_log.items(), state):
-                file.write(
-                    f'{k}\t{s}\t{",".join([str(i) for i in sorted(v)])}\n')
+        state = ['+' if (k in positive_pools) else '-' for k in pool_log]
+        for (k, v), s in zip(pool_log.items(), state):
+            layout_file.write(
+                f'{k}\t{s}\t{",".join([str(i) for i in sorted(v)])}\n')
 
-        else:
-            for k, v in sorted(pool_log.items()):
-                file.write(
-                    f'{k}\t-\t{",".join([str(i) for i in sorted(v)])}\n')
+    else:
+        for k, v in sorted(pool_log.items()):
+            layout_file.write(
+                f'{k}\t-\t{",".join([str(i) for i in sorted(v)])}\n')
 
 
 @click.command()
