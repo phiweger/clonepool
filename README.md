@@ -43,7 +43,12 @@ conda activate clonepool
 
 pip install -e .
 
-clonepool layout -n 470 -P 10 -o test/layout.csv --simulate test/results.csv
+# Generate layout and add positive pools after experiment (- -> +) or ...
+clonepool layout -n 235 -P 5 -o test/layout.csv
+# ... simulate positive pools at some prevalence
+clonepool layout -n 235 -P 5 -o test/layout.csv --simulate -p 0.1
+# Resolve
+clonepool resolve --layout test/layout.csv --result test/results.csv
 ```
 
 ![](img/sim.png)

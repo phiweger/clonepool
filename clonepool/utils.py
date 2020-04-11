@@ -73,62 +73,8 @@ def make_sample_map(pool_log):
     #             sample_map[i].append(k)
     return sample_map
 
+
 def resolve_samples(pool_log, sample_map, positive_pools, nsamples, npools):
-    # If any pool in which the sample is contained is negative, the sample
-    # is negative. If all pools the sample is in are positive, we cannot
-    # resolve its state.
-    # uncertain .. 1, resolved .. 0
-    sample_state = defaultdict(int)
-    for sample, pools in sample_map.items():
-        # ..., 492: [33, 48, 68], ...
-        if all([(pool in positive_pools) for pool in pools]):
-            sample_state[sample] += 1
-        else:
-            sample_state[sample] += 0
-    # TODO: all w/ 0 are negative, add to result
-    old = sum(sample_state.values())
-    # print(f'{old} unresolved')
-    # print(f'{old} samples cannot be resolved in first round')
-
-    # Catch case where all is resolved straight away
-    if old == 0:
-        result = round(nsamples / npools, 4)
-        return result
-
-    # If not all samples are resolved, iterate until they are or the number
-    # of unresolved samples converges (does not get smaller)
-    while old > 0:
-
-        for sample in sample_state:
-            sample_pools = sample_map[sample]
-            # assert len(sample_pools) == nreplicates
-
-            for pool in sample_pools:
-                s = [sample_state[i] for i in pool_log[pool]]
-                # if sum(s) > 0:
-                #     print(s)
-                if sum(s) == 1:
-                    sample_state[sample] = 0
-        new = sum(sample_state.values())
-        # print(new)
-        if new == old:  # convergence
-            # TODO: Export network view of the remaining samples, i.e.
-            # two samples share a connection if they are in the same pool.
-            # print(f'convergence at {new}')
-            result = round(nsamples / (npools + new), 4)
-            return result
-        else:
-            old = new
-    # print(f'{new} samples remain unresolved')
-    # All samples resolved
-    # return new, mean_size_pool, len(positive_pools)
-    result = round(nsamples / npools, 4)
-    # print(f'Can process {result} samples per reaction')
-    # If this falls below 1, it makees sense to just test each sample
-    # individually w/o pooling
-    return result
-
-def resolve_samples_felix(pool_log, sample_map, positive_pools, nsamples, npools):
     # Sample state: 0 == uncertain, +1 == pos, -1 == neg
     sample_state = {sample: 0 for sample in sample_map}
 
@@ -158,7 +104,7 @@ def resolve_samples_felix(pool_log, sample_map, positive_pools, nsamples, npools
     nuncertain = nsamples - nresolved
 
     result = round(nsamples / (npools + nuncertain), 4)
-    return result
+    return result, sample_state
 
 
 def simulate_pool(npools, nreplicates, maxpool, p):
