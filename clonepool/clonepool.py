@@ -51,26 +51,29 @@ print('done.')
 @click.command()
 @click.option(
     '-n', '--samples', required=True, type=int,
-    help='Number of samples (required)')
+    help='Number of samples')
 @click.option(
     '-r', '--replicates', default=2, type=int,
-    help='Number of sample replicates [2]')
+    help='Number of replicates per sample [2]')
 @click.option(
     '-p', '--prevalence', default=0.05, type=float,
     help='Expected prevalence [0.05]')
 @click.option(
     '-P', '--pool-size', required=True, type=int,
-    help='How many samples go into each pool (required)')
+    help='How many samples go into each pool')
 @click.option(
     '-w', '--pool-count', default=94, type=int,
     help='Number of pools [94]')
 @click.option(
     '-o', '--layout', required=True, default='layout',
-    help='Path to layout')
+    help='Path to layout file')
 @click.option(
     '--simulate', is_flag=True,
     help='Simulate pool results')
 def layout(prevalence, pool_size, pool_count, replicates, samples, layout, simulate):
+    '''
+    Generate pool layout. This assigns all samples to their respecitve pools.
+    '''
 
     max_sample_support = int(np.floor((pool_size * pool_count) / replicates))
 
@@ -100,11 +103,15 @@ def layout(prevalence, pool_size, pool_count, replicates, samples, layout, simul
 @click.command()
 @click.option(
     '--layout', default=None,
-    help='Path to +/- pool results')
+    help='Path to +/- pool results file')
 @click.option(
     '--result', default=None,
-    help='Path to +/- sample results')
+    help='Path to +/- sample results file')
 def resolve(layout, result):
+    '''
+    Resolve sample status from pool results. As this is not always
+    possible, some samples may remain in an uncertain state.
+    '''
     pool_log = defaultdict(set)    # pool: [samples]
     sample_map = defaultdict(set)  # sample: [pools]
     positive_pools = []
