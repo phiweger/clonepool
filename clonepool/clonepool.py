@@ -107,14 +107,17 @@ def layout(prevalence, pool_size, pool_count, replicates, samples, layout_file, 
 @click.command()
 @click.option(
     '--layout', default=None,
-    help='Path to +/- pool results file')
-@click.option(
-    '--result', default=None,
-    help='Path to +/- sample results file')
-def resolve(layout, result):
+    help='Path to layout file containing +/- pool results')
+# @click.option(
+#     '--result', default=None,
+#     help='Path to +/- sample results file')
+@click.argument(
+    'sample_results_file', required=False, default='-', type=click.File('w'))
+def resolve(layout, sample_results_file):
     '''
     Resolve sample status from pool results. As this is not always
     possible, some samples may remain in an uncertain state.
+    Writes to STDOUT or the given results file.
     '''
     pool_log = defaultdict(set)    # pool: [samples]
     sample_map = defaultdict(set)  # sample: [pools]
@@ -138,19 +141,18 @@ def resolve(layout, result):
         pool_log, sample_map, positive_pools, len(sample_map), len(pool_log))
     print(f'Effective number of samples: {effective_samples}')
 
-    with open(result, 'w') as out:
-        out.write('sample\tresult\n')
-        # TODO: sort items?
-        for i, j in states.items():
-            if j == -1:
-                out.write(f'{i}\t-\n')
-            elif j == 0:
-                out.write(f'{i}\tNA\n')
-            elif j == 1:
-                out.write(f'{i}\t+\n')
-            else:
-                print('The state of a pool should be -1, 0 or 1 -- it is neither. This should not have happened, please open an issue so we can find out why this happens.')
-                sys.exit(-1)
+    sample_results_file.write('sample\tresult\n')
+    # TODO: sort items?
+    for i, j in states.items():
+        if j == -1:
+            sample_results_file.write(f'{i}\t-\n')
+        elif j == 0:
+            sample_results_file.write(f'{i}\tNA\n')
+        elif j == 1:
+            sample_results_file.write(f'{i}\t+\n')
+        else:
+            print('The state of a pool should be -1, 0 or 1 -- it is neither. This should not have happened, please open an issue so we can find out why this happens.')
+            sys.exit(-1)
 
 
 # if __name__ == '__main__':
