@@ -113,8 +113,8 @@ def layout(prevalence, pool_size, pool_count, replicates, samples, layout, simul
     '--result', default=None,
     help='Path to +/- sample results')
 def resolve(layout, result):
-    pool_log = defaultdict(list)    # pool: [samples]
-    sample_map = defaultdict(list)  # sample: [pools]
+    pool_log = defaultdict(set)    # pool: [samples]
+    sample_map = defaultdict(set)  # sample: [pools]
     positive_pools = []
 
     with open(layout, 'r') as file:
@@ -126,10 +126,10 @@ def resolve(layout, result):
             if state == '+':
                 positive_pools.append(pool)
 
-            pool_log[pool].extend(samples)
+            pool_log[pool].update(samples)
 
             for i in samples:
-                sample_map[i].append(pool)
+                sample_map[i].add(pool)
 
     effective_samples, states = resolve_samples(
         pool_log, sample_map, positive_pools, len(sample_map), len(pool_log))
@@ -146,7 +146,7 @@ def resolve(layout, result):
             elif j == 1:
                 out.write(f'{i}\t+\n')
             else:
-                print('Something weird just happend')
+                print('The state of a pool should be -1, 0 or 1 -- it is neither. This should not have happened, please open an issue so we can find out why this happens.')
                 sys.exit(-1)
 
 
