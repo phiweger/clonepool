@@ -106,7 +106,7 @@ def layout(prevalence, pool_size, pool_count, replicates, samples, layout_file, 
 
 @click.command()
 @click.option(
-    '--layout', required=True, type=click.File('r'),
+    '--layout', '-l', required=True, type=click.File('r'),
     help='Path to layout file containing +/- pool results')
 # @click.option(
 #     '--result', default=None,
