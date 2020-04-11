@@ -118,7 +118,7 @@ def resolve(layout, result):
     '''
     pool_log = defaultdict(set)    # pool: [samples]
     sample_map = defaultdict(set)  # sample: [pools]
-    positive_pools = []
+    positive_pools = set()
 
     with open(layout, 'r') as file:
         _ = next(file)  # header
@@ -127,7 +127,7 @@ def resolve(layout, result):
             samples = samples.split(',')
 
             if state == '+':
-                positive_pools.append(pool)
+                positive_pools.add(pool)
 
             pool_log[pool].update(samples)
 
