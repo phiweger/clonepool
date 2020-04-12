@@ -112,7 +112,7 @@ def read_layout_file(layout_file):
     '-l', '--layout', required=True, type=click.File('r'),
     help='Path to input file containing pool layout')
 @click.option(
-    '-p', '--prevalence', default=0.05, type=float,
+    '-p', '--prevalence', default=0.05, type=click.FloatRange(0, 1),
     help='Sample prevalence used for simulation [0.05]')
 @click.argument(
     'out_layout_file', required=False, default='-', type=click.File('w'))
@@ -124,6 +124,8 @@ def simulate(layout, prevalence, out_layout_file):
 
     Writes to STDOUT or the given layout file.
     '''
+    # Some sanity checks.
+
     # Read existing pool layout, discard old positive pools if any.
     pool_log, _ = read_layout_file(layout)
 
