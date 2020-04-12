@@ -89,14 +89,18 @@ def layout(prevalence, pool_size, pool_count, replicates, samples, layout_file, 
     layout_file.write('pool\tresult\tsamples\n')  # header
 
     if simulate:
-        positive_pools = simulate_pools(
+        positive_pools, positive_samples = simulate_pools(
             pool_log, samples, prevalence)
             # pool_count, replicates, pool_size, prevalence)
 
         state = ['+' if (k in positive_pools) else '-' for k in pool_log]
+        
         for (k, v), s in sorted(zip(pool_log.items(), state)):
+            v = sorted(v)
+            v = [str(i) + '*' if (i in positive_samples) else i for i in v]
+            
             layout_file.write(
-                f'{k}\t{s}\t{",".join([str(i) for i in sorted(v)])}\n')
+                f'{k}\t{s}\t{",".join([str(i) for i in v])}\n')
 
     else:
         for k, v in sorted(pool_log.items()):

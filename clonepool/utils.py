@@ -109,12 +109,13 @@ def simulate_pools(pool_log, nsamples, prev):
 
     # Simulate positive samples
     positive_samples = sample_pos_samples(nsamples, npositive)
-
+    
     # Which pools become positive as a consequence?
     sample_map     = make_sample_map(pool_log)
     positive_pools = get_pos_pools(sample_map, positive_samples)
 
-    return positive_pools
+    # print(sorted(positive_samples))
+    return positive_pools, positive_samples
 
 
 def simulation_step(index):
