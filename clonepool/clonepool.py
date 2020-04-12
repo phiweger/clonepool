@@ -9,7 +9,12 @@ import sys
 import click
 import numpy as np
 
-from clonepool.utils import set_up_pools, simulate_pools, resolve_samples
+from clonepool.utils import (
+    set_up_pools,
+    simulate_pools,
+    resolve_samples,
+    make_sample_map,
+)
 
 
 ##############################################################################
@@ -100,6 +105,26 @@ def write_layout_file(layout_file, pool_log, state):
         sorted_samples = ",".join( [str(i) for i in sorted(samples)] )
         layout_file.write(f'{pool}\t{state}\t{sorted_samples}\n')
 
+def read_layout_file(layout_file):
+    '''
+    Read layout / pool results file.
+    '''
+    pool_log       = {}                     # pool: [samples]
+    positive_pools = set()
+
+    _ = next(layout_file)                   # skip header
+
+    for line in layout_file:
+        pool, state, samples_csv = line.strip().split('\t')
+        pool    = int(pool)
+        samples = [int(sample) for sample in samples_csv.split(',')]
+
+        if state == '+':
+            positive_pools.add(pool)
+
+        pool_log[pool] = set(samples)
+
+    return pool_log, positive_pools
 
 @click.command()
 def simulate():
@@ -126,25 +151,11 @@ def resolve(layout, sample_results_file):
     possible, some samples may remain in an uncertain state.
     Writes to STDOUT or the given results file.
     '''
-    pool_log = defaultdict(set)    # pool: [samples]
-    sample_map = defaultdict(set)  # sample: [pools]
-    positive_pools = set()
-
-    # Read layout / pool results file.
-    _ = next(layout)  # header
-    for line in layout:
-        pool, state, samples = line.strip().split('\t')
-        samples = samples.split(',')
-
-        if state == '+':
-            positive_pools.add(pool)
-
-        pool_log[pool].update(samples)
-
-        for i in samples:
-            sample_map[i].add(pool)
+    # Read layout file including pool test results.
+    pool_log, positive_pools = read_layout_file(layout)
 
     # Resolve samples.
+    sample_map = make_sample_map(pool_log)
     effective_samples, states = resolve_samples(
         pool_log, sample_map, positive_pools, len(sample_map), len(pool_log))
     print(f'Effective number of samples: {effective_samples}')
