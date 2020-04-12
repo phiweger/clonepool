@@ -102,6 +102,16 @@ def write_layout_file(layout_file, pool_log, state):
 
 
 @click.command()
+def simulate():
+    '''
+    For a given pool layout, simulate a test run. Uses a defined sample
+    prevalence to determine a random set of positive samples and,
+    successively, flags all pools as positive containing any of these samples.
+    '''
+    pass
+
+
+@click.command()
 @click.option(
     '--layout', '-l', required=True, type=click.File('r'),
     help='Path to layout file containing +/- pool results')
