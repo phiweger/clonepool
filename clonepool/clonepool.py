@@ -53,11 +53,11 @@ print('done.')
     '-n', '--samples', required=True, type=int,
     help='Number of samples')
 @click.option(
-    '-r', '--replicates', default=2, type=int,
-    help='Number of replicates per sample [2]')
-@click.option(
     '-P', '--pool-size', required=True, type=int,
     help='How many samples go into each pool')
+@click.option(
+    '-r', '--replicates', default=2, type=int,
+    help='Number of replicates per sample [2]')
 @click.option(
     '-w', '--pool-count', default=94, type=int,
     help='Number of pools (wells) [94]')
@@ -85,23 +85,20 @@ def layout(prevalence, pool_size, pool_count, replicates, samples, layout_file, 
 
     pool_log = set_up_pools(pool_count, samples, pool_size, replicates)
 
-    # with open(layout, 'w+') as file:
-    layout_file.write('pool\tresult\tsamples\n')  # header
+    positive_pools = \
+        simulate_pools(pool_log, samples, prevalence) if simulate else set()
+    state = ['+' if (pool in positive_pools) else '-' for pool in pool_log]
 
-    if simulate:
-        positive_pools = simulate_pools(
-            pool_log, samples, prevalence)
-            # pool_count, replicates, pool_size, prevalence)
+    write_layout_file(layout_file, pool_log, state)
 
-        state = ['+' if (k in positive_pools) else '-' for k in pool_log]
-        for (k, v), s in sorted(zip(pool_log.items(), state)):
-            layout_file.write(
-                f'{k}\t{s}\t{",".join([str(i) for i in sorted(v)])}\n')
 
-    else:
-        for k, v in sorted(pool_log.items()):
-            layout_file.write(
-                f'{k}\t-\t{",".join([str(i) for i in sorted(v)])}\n')
+def write_layout_file(layout_file, pool_log, state):
+    layout_file.write('pool\tresult\tsamples\n')        # write header line
+
+    # Write sorted list of pools, samples, and state.
+    for (pool, samples), state in sorted(zip(pool_log.items(), state)):
+        sorted_samples = ",".join( [str(i) for i in sorted(samples)] )
+        layout_file.write(f'{pool}\t{state}\t{sorted_samples}\n')
 
 
 @click.command()
