@@ -70,15 +70,23 @@ def resolve_samples(pool_log, sample_map, positive_pools, nsamples, npools):
     for pool, samples in pool_log.items():
         if pool not in positive_pools:
             for sample in samples:
-                sample_state[sample] = -1               # negative
+                sample_state[sample] = -1  # negative
 
     # Now, detect positives: only possible if exactly one sample in the pool
     # is uncertain and all others are negative.
     for pool, samples in pool_log.items():
         if pool in positive_pools:
-            uncertain_samples = [s for s in samples if sample_state[s] == 0]
+            uncertain_samples = [s for s in samples if sample_state[s] != -1]
             if len(uncertain_samples) == 1:
-                sample_state[uncertain_samples[0]] = +1         # positive
+                
+                # debug
+                # print(uncertain_samples)
+                # if not '*' in uncertain_samples[0]:
+                #     u = sample_map[uncertain_samples[0]]
+                #     for i in u:
+                #         print(pool_log[i])
+                
+                sample_state[uncertain_samples[0]] = 1  # positive
 
     # There is no iterative refinement. All negative samples can be detected
     # by looking at negative pools. Since the pools don't change their state,
