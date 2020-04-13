@@ -15,6 +15,9 @@ from clonepool.utils import (
     resolve_samples,
     make_sample_map,
     eprint,
+    get_false_pos_neg_rates,
+    read_layout_file,
+    write_layout_file,
 )
 
 
@@ -78,58 +81,6 @@ def layout(pool_size, pool_count, replicates, samples, layout_file):
     pool_log       = set_up_pools(pool_count, samples, pool_size, replicates)
     write_layout_file(layout_file, pool_log)
 
-
-def write_layout_file(layout_file, pool_log, pos_pools=set(), pos_samples=set()):
-    '''
-    Write the given pool layout (i.e. which samples are assigned to which
-    pool) to the given layout file handle. Also add the state of the pool
-    (+/-) as inferred from the passed set of positive pools. If ommitted, all
-    pools are assumed to be negative. If a set of positive samples is passed,
-    add a star "*" to all positive samples to keep the ground truth encoded in
-    the layout file.
-    '''
-    layout_file.write('pool\tresult\tsamples\n')        # write header line
-
-    # Write sorted list of pools, samples, and state.
-    for pool, samples in sorted(pool_log.items()):
-        state = '+' if (pool in pos_pools) else '-'
-        # Sort samples and add a '*' to positive ones.
-        samples_starred = [(str(i)+'*' if i in pos_samples else str(i))
-                           for i in sorted(samples)]
-        samples_csv     = ",".join(samples_starred)
-        layout_file.write(f'{pool}\t{state}\t{samples_csv}\n')
-
-
-def read_layout_file(layout_file):
-    '''
-    Read layout / pool results file. Returns the pool--sample map (which
-    samples does each pool contain?) as well as the sets of positive pools
-    (with state '+') and positive samples (marked with a star '*').
-    '''
-    pool_log       = {}                     # pool: [samples]
-    pos_pools   = set()
-    pos_samples = set()
-
-    _ = next(layout_file)                   # skip header
-
-    for line in layout_file:
-        pool, state, samples_csv = line.strip().split('\t')
-        pool = int(pool)
-
-        # Strip trailing '*' from samples and, if any, add to set of positives
-        samples = []
-        for sample_raw in samples_csv.split(','):
-            sample = int(sample_raw.rstrip('*'))
-            if sample_raw.endswith('*'):
-                pos_samples.add(sample)
-            samples.append(sample)
-
-        if state == '+':
-            pos_pools.add(pool)
-
-        pool_log[pool] = set(samples)
-
-    return pool_log, pos_pools, pos_samples
 
 @click.command()
 @click.option(
@@ -208,22 +159,6 @@ def resolve(layout, sample_results_file):
         state_symbol = '+' if state == +1 else '-' if state == -1 else 'NA'
         sample_results_file.write(f'{sample}\t{state_symbol}\n')
 
-
-def get_false_pos_neg_rates(sample_state, true_pos_samples):
-    nfalse_pos, nfalse_neg = 0, 0
-
-    for sample, state in sample_state.items():
-        if   state == +1 and sample not in true_pos_samples:
-            nfalse_pos += 1
-        elif state == -1 and sample in true_pos_samples:
-            nfalse_neg += 1
-
-    nsamples = len(sample_state)
-    digits = 3                  # round to that many digits
-    false_pos_rate = np.round(nfalse_pos / nsamples, digits)
-    false_neg_rate = np.round(nfalse_neg / nsamples, digits)
-
-    return false_pos_rate, false_neg_rate
 
 # if __name__ == '__main__':
 #     laylayout()
