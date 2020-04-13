@@ -46,7 +46,7 @@ print('done.')
 
 @click.command()
 @click.option(
-    '-n', '--samples', required=True, type=int,
+    '-n', '--samples', required=False, type=int,
     help='Number of samples')
 @click.option(
     '-P', '--pool-size', required=True, type=int,
@@ -65,10 +65,13 @@ def layout(pool_size, pool_count, replicates, samples, layout_file):
 
     Writes to STDOUT or the given layout file.
     '''
-
     max_sample_support = int(np.floor((pool_size * pool_count) / replicates))
-    assert samples <= max_sample_support, \
-    f'The chosen parameters support a maximum of {max_sample_support} samples'
+
+    if samples:
+        assert samples <= max_sample_support, \
+        f'The chosen parameters support a maximum of {max_sample_support} samples'
+    else:
+        samples = max_sample_support
 
     # Generate pool layout and write it to output file.
     pool_log       = set_up_pools(pool_count, samples, pool_size, replicates)
