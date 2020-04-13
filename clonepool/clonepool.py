@@ -44,15 +44,6 @@ print('done.')
 '''
 
 
-# -n, --samples: number of samples
-# -r, --replicates: number of replicates per sample [2] <-- default value
-# -p, --prevalence: prevalence of condition in samples [0.05]
-# -P, --pool-size: number of samples per pool
-# -m, --pool-count: total number of pools to be tested [94]
-# -l, --laylayout: path to pool laylayout file specifying the assignment of
-#               samples to pools (TODO description of format)
-# -r, --pool-results: path to the file containing the positive / negative
-#               test result for each pool (TODO description of format)
 @click.command()
 @click.option(
     '-n', '--samples', required=True, type=int,
@@ -66,18 +57,9 @@ print('done.')
 @click.option(
     '-w', '--pool-count', default=94, type=int,
     help='Number of pools (wells) [94]')
-# @click.option(
-#     '-o', '--layout', required=True, default='layout',
-#     help='File to which the generated layout is written')
 @click.argument(
     'layout_file', required=False, default='-', type=click.File('w'))
-@click.option(
-    '--simulate', '-s', is_flag=True,
-    help='Simulate pool results from random samples')
-@click.option(
-    '-p', '--prevalence', default=0.05, type=float,
-    help='Sample prevalence used for simulation [0.05]')
-def layout(prevalence, pool_size, pool_count, replicates, samples, layout_file, simulate):
+def layout(pool_size, pool_count, replicates, samples, layout_file):
     '''
     Generate pool layout. This assigns all samples to their respecitve pools.
 
@@ -85,15 +67,12 @@ def layout(prevalence, pool_size, pool_count, replicates, samples, layout_file, 
     '''
 
     max_sample_support = int(np.floor((pool_size * pool_count) / replicates))
-
     assert samples <= max_sample_support, \
     f'The chosen parameters support a maximum of {max_sample_support} samples'
 
-    pool_log = set_up_pools(pool_count, samples, pool_size, replicates)
-
-    positive_pools = \
-        simulate_pools(pool_log, samples, prevalence) if simulate else set()
-
+    # Generate pool layout and write it to output file.
+    pool_log       = set_up_pools(pool_count, samples, pool_size, replicates)
+    positive_pools = set()              # none positive
     write_layout_file(layout_file, pool_log, positive_pools)
 
 
@@ -133,11 +112,17 @@ def read_layout_file(layout_file):
     '-l', '--layout', required=True, type=click.File('r'),
     help='Path to input file containing pool layout')
 @click.option(
-    '-p', '--prevalence', default=0.05, type=float,
+    '-p', '--prevalence', default=0.05, type=click.FloatRange(0, 1),
     help='Sample prevalence used for simulation [0.05]')
+@click.option(
+    '-P', '--false-positives', default=0, type=click.FloatRange(0, 1),
+    help='Fraction of false-positive pools [0]')
+@click.option(
+    '-N', '--false-negatives', default=0, type=click.FloatRange(0, 1),
+    help='Fraction of false-negative pools [0]')
 @click.argument(
     'out_layout_file', required=False, default='-', type=click.File('w'))
-def simulate(layout, prevalence, out_layout_file):
+def simulate(layout, prevalence, false_positives, false_negatives, out_layout_file):
     '''
     For a given pool layout, simulate a test run. Uses a defined sample
     prevalence to determine a random set of positive samples and,
@@ -153,7 +138,8 @@ def simulate(layout, prevalence, out_layout_file):
                 [max(pool_samples) for pool_samples in pool_log.values()] )
 
     # Sample new positive pools.
-    positive_pools = simulate_pools(pool_log, nsamples, prevalence)
+    positive_pools = simulate_pools(
+            pool_log, nsamples, prevalence, false_positives, false_negatives)
 
     # Write layout including new pool results.
     write_layout_file(out_layout_file, pool_log, positive_pools)
