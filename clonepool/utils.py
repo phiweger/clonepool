@@ -1,3 +1,4 @@
+import sys
 from collections import defaultdict, Counter
 from itertools import combinations
 
@@ -12,6 +13,7 @@ from concurrent.futures import ProcessPoolExecutor
 # nreplicates = 1  # == degree of each node
 # p = 0.1
 # npools = 94
+
 
 def set_up_pools(npools, nsamples, maxpool, nreplicates):
     pool_cnt = {k: maxpool for k in np.arange(0, npools)} # how often each pool
@@ -41,11 +43,25 @@ def set_up_pools(npools, nsamples, maxpool, nreplicates):
 
     return pool_log
 
-def sample_pos_samples(nsamples, npositive):
-    return np.random.choice(
-        np.arange(0, nsamples),
-        size=npositive,
-        replace=False)
+def sample_pos_samples(nsamples, npositives):
+    return sample_from_range(nsamples, npositives)
+
+def sample_from_range(length, sample_size):
+    '''
+    Construct an int range of the given length n, ranging from 0 to n-1, and
+    sample sample_size many *different* items from it in a set.
+    '''
+    return sample_from(np.arange(0, length), sample_size)
+
+def sample_from(obj_list, sample_size):
+    '''
+    Sample sample_size many *different* items from the given list. Return it
+    as a set.
+    '''
+    return set(np.random.choice(
+        obj_list,
+        size=sample_size,
+        replace=False))
 
 def get_pos_pools(sample_map, positive_samples):
     positive_pools = set()
@@ -103,7 +119,7 @@ def resolve_samples(pool_log, sample_map, positive_pools, nsamples, npools):
     return result, sample_state
 
 
-def simulate_pools(pool_log, nsamples, prev):
+def simulate_pools(pool_log, nsamples, prev, false_pos = 0, false_neg = 0):
     '''
     Given a pool--sample map, the number of samples, and a sample
     prevalence, draw positive samples randomly according to their
@@ -117,13 +133,40 @@ def simulate_pools(pool_log, nsamples, prev):
 
     # Simulate positive samples
     positive_samples = sample_pos_samples(nsamples, npositive)
-    
+
+    eprint(f'Adding {npositive} positive samples: {sorted(positive_samples)}')
+
     # Which pools become positive as a consequence?
     sample_map     = make_sample_map(pool_log)
     positive_pools = get_pos_pools(sample_map, positive_samples)
 
-    # print(sorted(positive_samples))
-    return positive_pools, positive_samples
+    # Introduce false-negative pools.
+    npos_pools = len(positive_pools)
+    nfalse_neg = int(np.round(false_neg * npos_pools))
+    false_neg_pools = sample_from(list(positive_pools), nfalse_neg)
+    eprint(f'Adding {npos_pools} positive pools: {sorted(positive_pools)}.')
+    eprint(f'Adding {nfalse_neg} false-negative pools: {sorted(false_neg_pools)}')
+
+    # Introduce false-positive pools.
+    nneg_pools = len(pool_log) - npos_pools
+    nfalse_pos = int(np.round(false_pos * nneg_pools))
+    if nfalse_pos > 0:
+        negative_pools = {p for p in pool_log if p not in positive_pools}
+        false_pos_pools = sample_from(list(negative_pools), nfalse_pos)
+        positive_pools.update(false_pos_pools)
+        eprint(f'Adding {nfalse_pos} false-positive pools: {sorted(false_pos_pools)}')
+
+    # Remove false-negatives only after picking false-positives from it. This
+    # prevents re-inserting a pool as "false-positive" that has been removed
+    # before as a false negative.
+    positive_pools -= false_neg_pools
+
+    return positive_pools
+
+
+# Print to STDERR, cf. https://stackoverflow.com/a/14981125
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 
 def simulation_step(index):
@@ -143,3 +186,5 @@ def simulation_step(index):
                 #out.write(f'{index},{maxpool},{nrep},{p},{samples}\n')
                 csv_output.append(f'{index},{maxpool},{nrep},{p},{samples}\n')
     return csv_output
+
+

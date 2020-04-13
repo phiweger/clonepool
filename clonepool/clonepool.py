@@ -9,7 +9,12 @@ import sys
 import click
 import numpy as np
 
-from clonepool.utils import set_up_pools, simulate_pools, resolve_samples
+from clonepool.utils import (
+    set_up_pools,
+    simulate_pools,
+    resolve_samples,
+    make_sample_map,
+)
 
 
 ##############################################################################
@@ -39,73 +44,105 @@ print('done.')
 '''
 
 
-# -n, --samples: number of samples
-# -r, --replicates: number of replicates per sample [2] <-- default value
-# -p, --prevalence: prevalence of condition in samples [0.05]
-# -P, --pool-size: number of samples per pool
-# -m, --pool-count: total number of pools to be tested [94]
-# -l, --laylayout: path to pool laylayout file specifying the assignment of
-#               samples to pools (TODO description of format)
-# -r, --pool-results: path to the file containing the positive / negative
-#               test result for each pool (TODO description of format)
 @click.command()
 @click.option(
     '-n', '--samples', required=True, type=int,
     help='Number of samples')
 @click.option(
-    '-r', '--replicates', default=2, type=int,
-    help='Number of replicates per sample [2]')
-@click.option(
     '-P', '--pool-size', required=True, type=int,
     help='How many samples go into each pool')
 @click.option(
+    '-r', '--replicates', default=2, type=int,
+    help='Number of replicates per sample [2]')
+@click.option(
     '-w', '--pool-count', default=94, type=int,
     help='Number of pools (wells) [94]')
-# @click.option(
-#     '-o', '--layout', required=True, default='layout',
-#     help='File to which the generated layout is written')
 @click.argument(
     'layout_file', required=False, default='-', type=click.File('w'))
-@click.option(
-    '--simulate', '-s', is_flag=True,
-    help='Simulate pool results from random samples')
-@click.option(
-    '-p', '--prevalence', default=0.05, type=float,
-    help='Sample prevalence used for simulation [0.05]')
-def layout(prevalence, pool_size, pool_count, replicates, samples, layout_file, simulate):
+def layout(pool_size, pool_count, replicates, samples, layout_file):
     '''
     Generate pool layout. This assigns all samples to their respecitve pools.
+
     Writes to STDOUT or the given layout file.
     '''
 
     max_sample_support = int(np.floor((pool_size * pool_count) / replicates))
-
     assert samples <= max_sample_support, \
     f'The chosen parameters support a maximum of {max_sample_support} samples'
 
-    pool_log = set_up_pools(pool_count, samples, pool_size, replicates)
+    # Generate pool layout and write it to output file.
+    pool_log       = set_up_pools(pool_count, samples, pool_size, replicates)
+    positive_pools = set()              # none positive
+    write_layout_file(layout_file, pool_log, positive_pools)
 
-    # with open(layout, 'w+') as file:
-    layout_file.write('pool\tresult\tsamples\n')  # header
 
-    if simulate:
-        positive_pools, positive_samples = simulate_pools(
-            pool_log, samples, prevalence)
-            # pool_count, replicates, pool_size, prevalence)
+def write_layout_file(layout_file, pool_log, positive_pools):
+    layout_file.write('pool\tresult\tsamples\n')        # write header line
 
-        state = ['+' if (k in positive_pools) else '-' for k in pool_log]
-        
-        for (k, v), s in sorted(zip(pool_log.items(), state)):
-            v = sorted(v)
-            v = [str(i) + '*' if (i in positive_samples) else i for i in v]
-            
-            layout_file.write(
-                f'{k}\t{s}\t{",".join([str(i) for i in v])}\n')
+    # Write sorted list of pools, samples, and state.
+    for pool, samples in sorted(pool_log.items()):
+        state = '+' if (pool in positive_pools) else '-'
+        sorted_samples = ",".join( [str(i) for i in sorted(samples)] )
+        layout_file.write(f'{pool}\t{state}\t{sorted_samples}\n')
 
-    else:
-        for k, v in sorted(pool_log.items()):
-            layout_file.write(
-                f'{k}\t-\t{",".join([str(i) for i in sorted(v)])}\n')
+
+def read_layout_file(layout_file):
+    '''
+    Read layout / pool results file.
+    '''
+    pool_log       = {}                     # pool: [samples]
+    positive_pools = set()
+
+    _ = next(layout_file)                   # skip header
+
+    for line in layout_file:
+        pool, state, samples_csv = line.strip().split('\t')
+        pool    = int(pool)
+        samples = [int(sample) for sample in samples_csv.split(',')]
+
+        if state == '+':
+            positive_pools.add(pool)
+
+        pool_log[pool] = set(samples)
+
+    return pool_log, positive_pools
+
+@click.command()
+@click.option(
+    '-l', '--layout', required=True, type=click.File('r'),
+    help='Path to input file containing pool layout')
+@click.option(
+    '-p', '--prevalence', default=0.05, type=click.FloatRange(0, 1),
+    help='Sample prevalence used for simulation [0.05]')
+@click.option(
+    '-P', '--false-positives', default=0, type=click.FloatRange(0, 1),
+    help='Fraction of false-positive pools [0]')
+@click.option(
+    '-N', '--false-negatives', default=0, type=click.FloatRange(0, 1),
+    help='Fraction of false-negative pools [0]')
+@click.argument(
+    'out_layout_file', required=False, default='-', type=click.File('w'))
+def simulate(layout, prevalence, false_positives, false_negatives, out_layout_file):
+    '''
+    For a given pool layout, simulate a test run. Uses a defined sample
+    prevalence to determine a random set of positive samples and,
+    successively, flags all pools as positive containing any of these samples.
+
+    Writes to STDOUT or the given layout file.
+    '''
+    # Read existing pool layout, discard old positive pools if any.
+    pool_log, _ = read_layout_file(layout)
+
+    # Find number of samples
+    nsamples = 1 + max(
+                [max(pool_samples) for pool_samples in pool_log.values()] )
+
+    # Sample new positive pools.
+    positive_pools = simulate_pools(
+            pool_log, nsamples, prevalence, false_positives, false_negatives)
+
+    # Write layout including new pool results.
+    write_layout_file(out_layout_file, pool_log, positive_pools)
 
 
 @click.command()
@@ -123,25 +160,11 @@ def resolve(layout, sample_results_file):
     possible, some samples may remain in an uncertain state.
     Writes to STDOUT or the given results file.
     '''
-    pool_log = defaultdict(set)    # pool: [samples]
-    sample_map = defaultdict(set)  # sample: [pools]
-    positive_pools = set()
-
-    # Read layout / pool results file.
-    _ = next(layout)  # header
-    for line in layout:
-        pool, state, samples = line.strip().split('\t')
-        samples = samples.split(',')
-
-        if state == '+':
-            positive_pools.add(pool)
-
-        pool_log[pool].update(samples)
-
-        for i in samples:
-            sample_map[i].add(pool)
+    # Read layout file including pool test results.
+    pool_log, positive_pools = read_layout_file(layout)
 
     # Resolve samples.
+    sample_map = make_sample_map(pool_log)
     effective_samples, states = resolve_samples(
         pool_log, sample_map, positive_pools, len(sample_map), len(pool_log))
     print(f'Effective number of samples: {effective_samples}')
