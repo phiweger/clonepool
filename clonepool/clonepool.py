@@ -110,6 +110,7 @@ def read_layout_file(layout_file):
 
     return pool_log, positive_pools
 
+
 @click.command()
 @click.option(
     '-l', '--layout', required=True, type=click.File('r'),
@@ -138,7 +139,7 @@ def simulate(layout, prevalence, false_positives, false_negatives, out_layout_fi
 
     # Find number of samples
     nsamples = 1 + max(
-                [max(pool_samples) for pool_samples in pool_log.values()] )
+                [max(pool_samples) for pool_samples in pool_log.values()])
 
     # Sample new positive pools.
     positive_pools = simulate_pools(
