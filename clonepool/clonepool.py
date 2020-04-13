@@ -79,14 +79,25 @@ def layout(pool_size, pool_count, replicates, samples, layout_file):
     write_layout_file(layout_file, pool_log, positive_pools)
 
 
-def write_layout_file(layout_file, pool_log, positive_pools):
+def write_layout_file(layout_file, pool_log, pos_pools=set(), pos_samples=set()):
+    '''
+    Write the given pool layout (i.e. which samples are assigned to which
+    pool) to the given layout file handle. Also add the state of the pool
+    (+/-) as inferred from the passed set of positive pools. If ommitted, all
+    pools are assumed to be negative. If a set of positive samples is passed,
+    add a star "*" to all positive samples to keep the ground truth encoded in
+    the layout file.
+    '''
     layout_file.write('pool\tresult\tsamples\n')        # write header line
 
     # Write sorted list of pools, samples, and state.
     for pool, samples in sorted(pool_log.items()):
-        state = '+' if (pool in positive_pools) else '-'
-        sorted_samples = ",".join( [str(i) for i in sorted(samples)] )
-        layout_file.write(f'{pool}\t{state}\t{sorted_samples}\n')
+        state = '+' if (pool in pos_pools) else '-'
+        # Sort samples and add a '*' to positive ones.
+        samples_starred = [(str(i)+'*' if i in pos_samples else str(i))
+                           for i in sorted(samples)]
+        samples_csv     = ",".join(samples_starred)
+        layout_file.write(f'{pool}\t{state}\t{samples_csv}\n')
 
 
 def read_layout_file(layout_file):
@@ -141,11 +152,12 @@ def simulate(layout, prevalence, false_positives, false_negatives, out_layout_fi
                 [max(pool_samples) for pool_samples in pool_log.values()] )
 
     # Sample new positive pools.
-    positive_pools = simulate_pools(
+    positive_pools, positive_samples = simulate_pools(
             pool_log, nsamples, prevalence, false_positives, false_negatives)
 
     # Write layout including new pool results.
-    write_layout_file(out_layout_file, pool_log, positive_pools)
+    write_layout_file(
+            out_layout_file, pool_log, positive_pools, positive_samples)
 
 
 @click.command()

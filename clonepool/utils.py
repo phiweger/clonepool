@@ -134,7 +134,7 @@ def simulate_pools(pool_log, nsamples, prev, false_pos = 0, false_neg = 0):
     # Simulate positive samples
     positive_samples = sample_pos_samples(nsamples, npositive)
 
-    eprint(f'Adding {npositive} positive samples: {sorted(positive_samples)}')
+    eprint(f'Adding {npositive} pos. samples: {sorted(positive_samples)}')
 
     # Which pools become positive as a consequence?
     sample_map     = make_sample_map(pool_log)
@@ -144,8 +144,8 @@ def simulate_pools(pool_log, nsamples, prev, false_pos = 0, false_neg = 0):
     npos_pools = len(positive_pools)
     nfalse_neg = int(np.round(false_neg * npos_pools))
     false_neg_pools = sample_from(list(positive_pools), nfalse_neg)
-    eprint(f'Adding {npos_pools} positive pools: {sorted(positive_pools)}.')
-    eprint(f'Adding {nfalse_neg} false-negative pools: {sorted(false_neg_pools)}')
+    eprint(f'Adding {npos_pools} pos. pools: {sorted(positive_pools)}.')
+    eprint(f'Adding {nfalse_neg} false-neg. pools: {sorted(false_neg_pools)}')
 
     # Introduce false-positive pools.
     nneg_pools = len(pool_log) - npos_pools
@@ -154,14 +154,14 @@ def simulate_pools(pool_log, nsamples, prev, false_pos = 0, false_neg = 0):
         negative_pools = {p for p in pool_log if p not in positive_pools}
         false_pos_pools = sample_from(list(negative_pools), nfalse_pos)
         positive_pools.update(false_pos_pools)
-        eprint(f'Adding {nfalse_pos} false-positive pools: {sorted(false_pos_pools)}')
+        eprint(f'Adding {nfalse_pos} false-pos. pools: {sorted(false_pos_pools)}')
 
     # Remove false-negatives only after picking false-positives from it. This
     # prevents re-inserting a pool as "false-positive" that has been removed
     # before as a false negative.
     positive_pools -= false_neg_pools
 
-    return positive_pools
+    return positive_pools, positive_samples
 
 
 # Print to STDERR, cf. https://stackoverflow.com/a/14981125
@@ -177,7 +177,8 @@ def simulation_step(index):
             for p in np.arange(0.01, 0.3, 0.01):
                 # WARNING: THIS IS UNTESTED with the new code.
                 pool_log = set_up_pools(npools, nsamples, maxpool, nreplicates)
-                positive_pools = simulate_pools(pool_log, nsamples, p)
+                positive_pools, positive_samples = simulate_pools(
+                                                        pool_log, nsamples, p)
                 sample_map = make_sample_map(pool_log)
                 samples, states = resolve_samples(
                         pool_log, sample_map, positive_pools, nsamples, npools)
