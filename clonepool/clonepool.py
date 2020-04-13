@@ -114,9 +114,15 @@ def read_layout_file(layout_file):
 @click.option(
     '-p', '--prevalence', default=0.05, type=click.FloatRange(0, 1),
     help='Sample prevalence used for simulation [0.05]')
+@click.option(
+    '-P', '--false-positives', default=0, type=click.FloatRange(0, 1),
+    help='Fraction of false-positive pools [0]')
+@click.option(
+    '-N', '--false-negatives', default=0, type=click.FloatRange(0, 1),
+    help='Fraction of false-negative pools [0]')
 @click.argument(
     'out_layout_file', required=False, default='-', type=click.File('w'))
-def simulate(layout, prevalence, out_layout_file):
+def simulate(layout, prevalence, false_positives, false_negatives, out_layout_file):
     '''
     For a given pool layout, simulate a test run. Uses a defined sample
     prevalence to determine a random set of positive samples and,
@@ -124,8 +130,6 @@ def simulate(layout, prevalence, out_layout_file):
 
     Writes to STDOUT or the given layout file.
     '''
-    # Some sanity checks.
-
     # Read existing pool layout, discard old positive pools if any.
     pool_log, _ = read_layout_file(layout)
 
@@ -134,7 +138,8 @@ def simulate(layout, prevalence, out_layout_file):
                 [max(pool_samples) for pool_samples in pool_log.values()] )
 
     # Sample new positive pools.
-    positive_pools = simulate_pools(pool_log, nsamples, prevalence)
+    positive_pools = simulate_pools(
+            pool_log, nsamples, prevalence, false_positives, false_negatives)
 
     # Write layout including new pool results.
     write_layout_file(out_layout_file, pool_log, positive_pools)
