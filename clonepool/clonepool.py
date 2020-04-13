@@ -110,7 +110,7 @@ def simulate(layout, prevalence, false_positives, false_negatives, out_layout_fi
 
     # Find number of samples
     nsamples = 1 + max(
-                [max(pool_samples) for pool_samples in pool_log.values()] )
+                [max(pool_samples) for pool_samples in pool_log.values()])
 
     # Sample new positive pools.
     positive_pools, positive_samples = simulate_pools(
