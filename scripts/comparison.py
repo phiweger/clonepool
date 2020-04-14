@@ -15,7 +15,7 @@ from clonepool.utils import (
 
 def one_test_run(replicates, pool_size, prevalence):
 
-    pool_count = 94
+    pool_count = 50
     false_positives = 0
     false_negatives = 0
 

@@ -23,6 +23,7 @@ ggplot(
     
 
 ggsave('sim.pdf', width=16, height=12, units='cm')
+ggsave('sim.png', width=16, height=12, units='cm')
 
 #facet_wrap(~pool_size, scale='free_y') +
 #facet_grid(pool_size ~ replicates) +  

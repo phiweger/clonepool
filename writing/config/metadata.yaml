@@ -1,0 +1,44 @@
+# ---
+# # https://pandoc.org/MANUAL.html#extension-yaml_metadata_block
+# fontsize: 10pt
+# geometry: margin=3cm
+# linestretch: 1.5
+# fig_caption: yes
+# fontfamily: palatino  # times
+# # toc: no
+# # toc-depth: 3
+# # toc-title: Table of contents
+# # implicit_figures: no
+# # escaped_line_breaks: yes
+# header-includes:
+#   - \usepackage[left]{lineno}
+#   - \linenumbers
+
+# # multiline
+# # header-includes:
+# # - |
+# #   ```{=latex}
+# #   \let\oldsection\section
+# #   \renewcommand{\section}[1]{\clearpage\oldsection{#1}}
+# #   ```
+
+# # link-citations: true
+# # citation-style: nature.csl
+# ---
+
+---
+fontsize: 10pt
+geometry: margin=2cm
+linestretch: 1
+fig_caption: yes
+implicit_figures: no
+escaped_line_breaks: yes
+fontfamily: palatino  # times
+toc: yes
+toc-depth: 3
+urlcolor: magenta
+# toc-title: Table of contents
+# header-includes:
+#   - \usepackage[left]{lineno}
+#  - \linenumbers
+---

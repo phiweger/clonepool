@@ -51,5 +51,5 @@ clonepool simulate -l test/layout.csv test/simulation.csv
 clonepool resolve --layout test/simulation.csv test/results.csv
 ```
 
-![](scripts/sim.png)
+![](img/sim.png)
 
