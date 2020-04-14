@@ -8,7 +8,7 @@
 wip/
 
 # large file extensions
-# *.pdf
+!*.pdf
 
 # Mac OS specific
 # https://github.com/github/gitignore/blob/master/Global/macOS.gitignore
