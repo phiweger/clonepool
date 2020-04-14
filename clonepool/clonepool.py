@@ -14,6 +14,10 @@ from clonepool.utils import (
     simulate_pools,
     resolve_samples,
     make_sample_map,
+    eprint,
+    get_false_pos_neg_rates,
+    read_layout_file,
+    write_layout_file,
 )
 
 
@@ -75,40 +79,7 @@ def layout(pool_size, pool_count, replicates, samples, layout_file):
 
     # Generate pool layout and write it to output file.
     pool_log       = set_up_pools(pool_count, samples, pool_size, replicates)
-    positive_pools = set()              # none positive
-    write_layout_file(layout_file, pool_log, positive_pools)
-
-
-def write_layout_file(layout_file, pool_log, positive_pools):
-    layout_file.write('pool\tresult\tsamples\n')        # write header line
-
-    # Write sorted list of pools, samples, and state.
-    for pool, samples in sorted(pool_log.items()):
-        state = '+' if (pool in positive_pools) else '-'
-        sorted_samples = ",".join( [str(i) for i in sorted(samples)] )
-        layout_file.write(f'{pool}\t{state}\t{sorted_samples}\n')
-
-
-def read_layout_file(layout_file):
-    '''
-    Read layout / pool results file.
-    '''
-    pool_log       = {}                     # pool: [samples]
-    positive_pools = set()
-
-    _ = next(layout_file)                   # skip header
-
-    for line in layout_file:
-        pool, state, samples_csv = line.strip().split('\t')
-        pool    = int(pool)
-        samples = [int(sample) for sample in samples_csv.split(',')]
-
-        if state == '+':
-            positive_pools.add(pool)
-
-        pool_log[pool] = set(samples)
-
-    return pool_log, positive_pools
+    write_layout_file(layout_file, pool_log)
 
 
 @click.command()
@@ -135,18 +106,19 @@ def simulate(layout, prevalence, false_positives, false_negatives, out_layout_fi
     Writes to STDOUT or the given layout file.
     '''
     # Read existing pool layout, discard old positive pools if any.
-    pool_log, _ = read_layout_file(layout)
+    pool_log, _, _ = read_layout_file(layout)
 
     # Find number of samples
     nsamples = 1 + max(
                 [max(pool_samples) for pool_samples in pool_log.values()])
 
     # Sample new positive pools.
-    positive_pools = simulate_pools(
+    positive_pools, positive_samples = simulate_pools(
             pool_log, nsamples, prevalence, false_positives, false_negatives)
 
     # Write layout including new pool results.
-    write_layout_file(out_layout_file, pool_log, positive_pools)
+    write_layout_file(
+            out_layout_file, pool_log, positive_pools, positive_samples)
 
 
 @click.command()
@@ -164,27 +136,28 @@ def resolve(layout, sample_results_file):
     possible, some samples may remain in an uncertain state.
     Writes to STDOUT or the given results file.
     '''
-    # Read layout file including pool test results.
-    pool_log, positive_pools = read_layout_file(layout)
+    # Read layout file including pool test results and, possibly, a ground
+    # truth set of positive samples
+    pool_log, pos_pools, true_pos_samples = read_layout_file(layout)
 
     # Resolve samples.
     sample_map = make_sample_map(pool_log)
-    effective_samples, states = resolve_samples(
-        pool_log, sample_map, positive_pools, len(sample_map), len(pool_log))
-    print(f'Effective number of samples: {effective_samples}')
+    effective_samples, sample_state = resolve_samples(
+        pool_log, sample_map, pos_pools, len(sample_map), len(pool_log))
+    eprint(f'Effective number of samples / test: {effective_samples}')
+
+    # Evaluate ground truth if available.
+    if len(true_pos_samples) > 0:
+        false_pos_rate, false_neg_rate = get_false_pos_neg_rates(
+                sample_state, true_pos_samples)
+        eprint(f'False-pos. rate: {false_pos_rate}')
+        eprint(f'False-neg. rate: {false_neg_rate}')
 
     # Print / write results.
     sample_results_file.write('sample\tresult\n')
-    for sample, state in sorted(states.items()):
-        if state == -1:
-            sample_results_file.write(f'{sample}\t-\n')
-        elif state  == 0:
-            sample_results_file.write(f'{sample}\tNA\n')
-        elif state  == 1:
-            sample_results_file.write(f'{sample}\t+\n')
-        else:
-            print('The state of a pool should be -1, 0 or 1 -- it is neither. This should not have happened, please open an issue so we can find out why this happens.')
-            sys.exit(-1)
+    for sample, state in sorted(sample_state.items()):
+        state_symbol = '+' if state == +1 else '-' if state == -1 else 'NA'
+        sample_results_file.write(f'{sample}\t{state_symbol}\n')
 
 
 # if __name__ == '__main__':

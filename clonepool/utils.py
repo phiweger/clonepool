@@ -134,7 +134,7 @@ def simulate_pools(pool_log, nsamples, prev, false_pos = 0, false_neg = 0):
     # Simulate positive samples
     positive_samples = sample_pos_samples(nsamples, npositive)
 
-    eprint(f'Adding {npositive} positive samples: {sorted(positive_samples)}')
+    eprint(f'Adding {npositive} pos. samples: {sorted(positive_samples)}')
 
     # Which pools become positive as a consequence?
     sample_map     = make_sample_map(pool_log)
@@ -144,8 +144,8 @@ def simulate_pools(pool_log, nsamples, prev, false_pos = 0, false_neg = 0):
     npos_pools = len(positive_pools)
     nfalse_neg = int(np.round(false_neg * npos_pools))
     false_neg_pools = sample_from(list(positive_pools), nfalse_neg)
-    eprint(f'Adding {npos_pools} positive pools: {sorted(positive_pools)}.')
-    eprint(f'Adding {nfalse_neg} false-negative pools: {sorted(false_neg_pools)}')
+    eprint(f'Adding {npos_pools} pos. pools: {sorted(positive_pools)}.')
+    eprint(f'Adding {nfalse_neg} false-neg. pools: {sorted(false_neg_pools)}')
 
     # Introduce false-positive pools.
     nneg_pools = len(pool_log) - npos_pools
@@ -154,19 +154,89 @@ def simulate_pools(pool_log, nsamples, prev, false_pos = 0, false_neg = 0):
         negative_pools = {p for p in pool_log if p not in positive_pools}
         false_pos_pools = sample_from(list(negative_pools), nfalse_pos)
         positive_pools.update(false_pos_pools)
-        eprint(f'Adding {nfalse_pos} false-positive pools: {sorted(false_pos_pools)}')
+        eprint(f'Adding {nfalse_pos} false-pos. pools: {sorted(false_pos_pools)}')
 
     # Remove false-negatives only after picking false-positives from it. This
     # prevents re-inserting a pool as "false-positive" that has been removed
     # before as a false negative.
     positive_pools -= false_neg_pools
 
-    return positive_pools
+    return positive_pools, positive_samples
 
 
 # Print to STDERR, cf. https://stackoverflow.com/a/14981125
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
+
+def get_false_pos_neg_rates(sample_state, true_pos_samples):
+    nfalse_pos, nfalse_neg = 0, 0
+
+    for sample, state in sample_state.items():
+        if   state == +1 and sample not in true_pos_samples:
+            nfalse_pos += 1
+        elif state == -1 and sample in true_pos_samples:
+            nfalse_neg += 1
+
+    nsamples = len(sample_state)
+    digits = 3                  # round to that many digits
+    false_pos_rate = np.round(nfalse_pos / nsamples, digits)
+    false_neg_rate = np.round(nfalse_neg / nsamples, digits)
+
+    return false_pos_rate, false_neg_rate
+
+
+def read_layout_file(layout_file):
+    '''
+    Read layout / pool results file. Returns the pool--sample map (which
+    samples does each pool contain?) as well as the sets of positive pools
+    (with state '+') and positive samples (marked with a star '*').
+    '''
+    pool_log       = {}                     # pool: [samples]
+    pos_pools   = set()
+    pos_samples = set()
+
+    _ = next(layout_file)                   # skip header
+
+    for line in layout_file:
+        pool, state, samples_csv = line.strip().split('\t')
+        pool = int(pool)
+
+        # Strip trailing '*' from samples and, if any, add to set of positives
+        samples = []
+        for sample_raw in samples_csv.split(','):
+            sample = int(sample_raw.rstrip('*'))
+            if sample_raw.endswith('*'):
+                pos_samples.add(sample)
+            samples.append(sample)
+
+        if state == '+':
+            pos_pools.add(pool)
+
+        pool_log[pool] = set(samples)
+
+    return pool_log, pos_pools, pos_samples
+
+
+def write_layout_file(layout_file, pool_log, pos_pools=set(), pos_samples=set()):
+    '''
+    Write the given pool layout (i.e. which samples are assigned to which
+    pool) to the given layout file handle. Also add the state of the pool
+    (+/-) as inferred from the passed set of positive pools. If ommitted, all
+    pools are assumed to be negative. If a set of positive samples is passed,
+    add a star "*" to all positive samples to keep the ground truth encoded in
+    the layout file.
+    '''
+    layout_file.write('pool\tresult\tsamples\n')        # write header line
+
+    # Write sorted list of pools, samples, and state.
+    for pool, samples in sorted(pool_log.items()):
+        state = '+' if (pool in pos_pools) else '-'
+        # Sort samples and add a '*' to positive ones.
+        samples_starred = [(str(i)+'*' if i in pos_samples else str(i))
+                           for i in sorted(samples)]
+        samples_csv     = ",".join(samples_starred)
+        layout_file.write(f'{pool}\t{state}\t{samples_csv}\n')
 
 
 def simulation_step(index):
@@ -177,7 +247,8 @@ def simulation_step(index):
             for p in np.arange(0.01, 0.3, 0.01):
                 # WARNING: THIS IS UNTESTED with the new code.
                 pool_log = set_up_pools(npools, nsamples, maxpool, nreplicates)
-                positive_pools = simulate_pools(pool_log, nsamples, p)
+                positive_pools, positive_samples = simulate_pools(
+                                                        pool_log, nsamples, p)
                 sample_map = make_sample_map(pool_log)
                 samples, states = resolve_samples(
                         pool_log, sample_map, positive_pools, nsamples, npools)
