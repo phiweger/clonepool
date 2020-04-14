@@ -170,20 +170,35 @@ def eprint(*args, **kwargs):
 
 
 def get_false_pos_neg_rates(sample_state, true_pos_samples):
-    nfalse_pos, nfalse_neg = 0, 0
-
+    '''
+    Given a dict containing test results (+1 for positive, -1 for negative,
+    and 0 for uncertain), and the set of the truly positive samples (ground
+    truth), compute false positive and false negative rates / ratios.
+    '''
+    # Count positives, negatives, false positives, and false negatives.
+    npos, nfalse_pos, nneg, nfalse_neg = 0, 0, 0, 0
     for sample, state in sample_state.items():
-        if   state == +1 and sample not in true_pos_samples:
-            nfalse_pos += 1
-        elif state == -1 and sample in true_pos_samples:
-            nfalse_neg += 1
+        if state == +1:
+            npos += 1               # samples resolved as positive
+            if sample not in true_pos_samples:
+                nfalse_pos += 1     # samples *incorrectly* resolved as pos
+        elif state == -1:
+            nneg += 1               # samples resolved as negative
+            if sample in true_pos_samples:
+                nfalse_neg += 1     # samples *incorrectly* resolved as neg
 
-    nsamples = len(sample_state)
+    # Calculate rounded false pos/neg rates.
     digits = 3                  # round to that many digits
-    false_pos_rate = np.round(nfalse_pos / nsamples, digits)
-    false_neg_rate = np.round(nfalse_neg / nsamples, digits)
+    false_pos_rate = np.round(nfalse_pos / nneg, digits) if nneg > 0 else 0
+    false_neg_rate = np.round(nfalse_neg / npos, digits) if npos > 0 else 0
 
-    return false_pos_rate, false_neg_rate
+    # TODO need to weight the FPR / FNR with the fraction of resolved samples,
+    # where the unresolved samples have the FPR / FNR of the pool test
+    # procedure.
+
+    # TODO aggregate results in something like collections.namedtuple()
+
+    return false_pos_rate, false_neg_rate, npos, nneg
 
 
 def read_layout_file(layout_file):
