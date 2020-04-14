@@ -150,8 +150,8 @@ def resolve(layout, sample_results_file):
     if len(true_pos_samples) > 0:
         false_pos_rate, false_neg_rate, npos, nneg = get_false_pos_neg_rates(
                 sample_state, true_pos_samples)
-        eprint(f'False-pos. rate: {false_pos_rate} of {nneg} neg. samples')
-        eprint(f'False-neg. rate: {false_neg_rate} of {npos} pos. samples')
+        eprint(f'False-pos. rate resolved: {false_pos_rate} of {nneg} neg. samples')
+        eprint(f'False-neg. rate resolved: {false_neg_rate} of {npos} pos. samples')
 
     # Print / write results.
     sample_results_file.write('sample\tresult\n')
