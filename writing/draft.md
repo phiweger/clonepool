@@ -61,7 +61,7 @@ status to be resolved more often than with traditional pooling. At 2%
 prevalence and 20 samples per pool, our protocol increases screening capacity
 by factors of 5 and 2 compared to individual testing and traditional pooling,
 respectively. The corresponding software to layout and resolve samples is
-freely released under a BSD license (https://github.com/phiweger/clonepool).
+freely available under a BSD license (https://github.com/phiweger/clonepool).
 
 
 \newpage
@@ -76,15 +76,15 @@ spreading. However, in most laboratories, the screening capacity is limited by
 the number of PCR reactions that can be performed in a day. It is, therefore,
 desirable to maximize the number of samples that can be tested per reaction.
 
-Various approaches have been proposed to do this in the context of SARS-CoV-2
+Various approaches have been proposed to do so in the context of SARS-CoV-2
 RT-PCR testing [@Sinnott-Armstrong2020-yb; @Eis-Huebinger2020-fo]. One problem
 with the traditional pooling approach, where several samples are collected and
 tested collectively, is that the number of positive pools that require
 individual retesting increases rapidly with the number of positive samples in
 the overall population, henceforth called "prevalence". A high prevalence
-renders pooling ineffective. To mitigate this, we propose to test samples in
+renders traditional pooling ineffective. To mitigate this, we propose to test samples in
 replicates and distribute them across multiple pools. The resulting "pool
-address" can then be used to resolve samples in one pool, given information
+address" can then be used to resolve samples in one pool, given the information
 from other pools that contain a replicate. While some previous studies have
 taken a similar approach implicitly [@@Sinnott-Armstrong2020-yb], it has
 neither been investigated systematically for more replicates than two, nor is
@@ -103,26 +103,32 @@ $s_{e} = \frac{s_{m}}{p + s}$.
 The clonepool algorithm first distributes all sample replicates randomly
 across the available pools, with the limitation that a sample's replicates do
 not co-occur in the same pool. After the pools have been tested, the algorithm
-attempts to resolve the samples' status in two phases: In a first phases,
+attempts to resolve the samples' status in two phases: In a first phase,
 all samples that have at least one replicate in a negative pool are marked
-negative. In the second phase, samples that only occur in positive pools
-and where at least one replicate is in a pool where all other samples are
-negative, are marked positive (red, orange). All other samples cannot be
-resolved, and need to be retested individually. The longer the set of pools a
-sample is distributed across, i.e., the longer its "pool address", the more
-samples can be resolved given a particular prevalence.
+negative. In the second phase, samples that (a) only occur in positive pools,
+and (b) have at least one replicate in a pool in which all other samples are
+known to be negative, are marked positive (red, orange). All other samples
+cannot be resolved, and need to be retested individually. The longer the set
+of pools a sample is distributed across, i.e., the longer its "pool address",
+the more samples can be resolved given a particular prevalence. Of course, a
+higher number of replicates comes at the price of a reduced number of samples
+which can be processed at a fixed number of wells. Fortunately, our results
+provide an efficient means to find the optimal trade-off for any given set of
+parameters.
 
-![Illustration of the clonepool algorithm. Positive pools (circles) are marked
-grey, negative ones in white. Samples are depicted as squares, positive ones
-with a "+". In a first phase, all samples that have at least one replicate
-in a negative pool are marked negative (blue, green). In the second phase,
+![Illustration of the clonepool algorithm. Circles denote the wells, each
+containing a pool of samples (small squares). A distinct color marks all
+replicates of a single sample. Positive and negative samples are flagged with
+"+" or "-", respectively.  Positive pools are shaded in grey, negative ones in
+white.  In a first phase, all samples that have at least one replicate in a
+negative pool are identified as negative (blue, green). In the second phase,
 samples that only occur in positive pools and where at least one replicate is
-in a pool where all other samples are negative, are marked positive (red,
-orange). All other samples cannot be resolved and have to be retested
+in a pool where all other samples are negative, are recognized as positive
+(red, orange). All other samples cannot be resolved and have to be retested
 individually (yellow).](../img/protocol.pdf){#fig:protocol}
 
-In our simulation test of the proposed clonepool algorithm, we assume no
-pipetting errors, which can be achieved e.g., through the use of a pipetting
+We tested the proposed clonepool algorithm using simulated data. We assumed no
+pipetting errors, which can be achieved, e.g., through the use of a pipetting
 robot. We also assume that 94 pools are available, which corresponds to a
 96-well plate with two wells reserved for a positive and a negative control.
 Furthermore, we assume that there are no false positive or false negative PCR
@@ -131,10 +137,12 @@ reactions.
 Two parameters determine which pooling scheme is most effective (Fig.
 @fig:simulation). If both the prevalence and the number of samples per pool
 are low, traditional pooling without replicates yields the highest number of
-samples per reaction. However, if the prevalence increases or more samples are
-pooled, anyone pool is more likely positive. Sample replicates will then
-resolve more samples. In our testing experience, we observed a prevalence of
-about 5%, but this value is subject to variability e.g., depending on a
+samples per reaction. However, as the prevalence increases or more and more
+samples are pooled, the number of positive pools increases, causing a large
+number of retested samples and thus reducing the overall throughput. Using
+sample replicates will then allow to resolve more samples than in the
+traditional approach. In our testing experience, we observed a prevalence of
+about 5%, but this value is subject to variability, e.g., depending on a
 population's pre-test probability.
 
 The number of samples that can be pooled without affecting the PCR sensitivity
@@ -145,8 +153,8 @@ unspecific amplification. SARS-CoV-2 amplifies at low Ct values due to high
 viral titers (Ct 18-25 depending on the material and number of days
 post-infection) [@Wolfel2020-tt; @Holshue2020-mm]. A 20-fold dilution, i.e.,
 pooling 20 samples, would cause the Ct value to increase by about 4.3 cycles
-($2^x = d$, where d is the dilution and x the shift in Ct), still comfortably
-above the detection limit.
+($2^x = d$, where d is the dilution and x the shift in Ct), which still lies
+comfortably above the detection limit.
 
 <!--
 See 8. here:
@@ -169,7 +177,7 @@ replicates increases the effective number of samples per reaction by 31%
 compared to pooling without replicates. At 2% prevalence and 20 samples per
 pool -- a scenario more akin to screening large populations -- 5.01 times the
 number of samples can be screened compared to individual testing (SD 0.28),
-and the increase over no replicate pooling is 193%. These presented values
+and the increase over traditional pooling is 193%. These presented values
 correspond to _in silico_ simulations, and require further validation in the
 laboratory.
 
