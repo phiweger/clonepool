@@ -1,18 +1,11 @@
+# clonepool/utils.py
+
 import sys
 from collections import defaultdict, Counter
 from itertools import combinations
 
 import networkx as nx
 import numpy as np
-# from tqdm import tqdm
-from concurrent.futures import ProcessPoolExecutor
-
-
-# nsamples = 500
-# maxpool = 10
-# nreplicates = 1  # == degree of each node
-# p = 0.1
-# npools = 94
 
 
 def set_up_pools(npools, nsamples, maxpool, nreplicates):
@@ -37,14 +30,14 @@ def set_up_pools(npools, nsamples, maxpool, nreplicates):
             # consequence: some pools are larger than maxpool
 
         for pool in address:
-            # for node in pool_log[pool]:
-            #     g.add_edge(i, node)
             pool_log[pool].add(i)
 
     return pool_log
 
+
 def sample_pos_samples(nsamples, npositives):
     return sample_from_range(nsamples, npositives)
+
 
 def sample_from_range(length, sample_size):
     '''
@@ -52,6 +45,7 @@ def sample_from_range(length, sample_size):
     sample sample_size many *different* items from it in a set.
     '''
     return sample_from(np.arange(0, length), sample_size)
+
 
 def sample_from(obj_list, sample_size):
     '''
@@ -63,12 +57,14 @@ def sample_from(obj_list, sample_size):
         size=sample_size,
         replace=False))
 
+
 def get_pos_pools(sample_map, positive_samples):
     positive_pools = set()
     for positive_sample in positive_samples:
         for pool in sample_map[positive_sample]:
             positive_pools.add(pool)
     return positive_pools
+
 
 def make_sample_map(pool_log):
     sample_map = defaultdict(set)
@@ -94,14 +90,6 @@ def resolve_samples(pool_log, sample_map, positive_pools, nsamples, npools):
         if pool in positive_pools:
             uncertain_samples = [s for s in samples if sample_state[s] != -1]
             if len(uncertain_samples) == 1:
-                
-                # debug
-                # print(uncertain_samples)
-                # if not '*' in uncertain_samples[0]:
-                #     u = sample_map[uncertain_samples[0]]
-                #     for i in u:
-                #         print(pool_log[i])
-                
                 sample_state[uncertain_samples[0]] = 1  # positive
 
     # There is no iterative refinement. All negative samples can be detected
@@ -125,15 +113,10 @@ def simulate_pools(pool_log, nsamples, prev, false_pos = 0, false_neg = 0):
     prevalence, draw positive samples randomly according to their
     prevalence and determine the positive pools from them.
     '''
-
     npositive = int(np.round(prev * nsamples))
-
-    # g = nx.Graph()
-    # g.add_nodes_from(samples)
 
     # Simulate positive samples
     positive_samples = sample_pos_samples(nsamples, npositive)
-
     eprint(f'Adding {npositive} pos. samples: {sorted(positive_samples)}')
 
     # Which pools become positive as a consequence?
@@ -164,8 +147,11 @@ def simulate_pools(pool_log, nsamples, prev, false_pos = 0, false_neg = 0):
     return positive_pools, positive_samples
 
 
-# Print to STDERR, cf. https://stackoverflow.com/a/14981125
 def eprint(*args, **kwargs):
+    '''
+    Behaves exactly like regular print(), but prints to STDERR.
+    Cf. https://stackoverflow.com/a/14981125
+    '''
     print(*args, file=sys.stderr, **kwargs)
 
 
@@ -254,23 +240,4 @@ def write_layout_file(layout_file, pool_log, pos_pools=set(), pos_samples=set())
         layout_file.write(f'{pool}\t{state}\t{samples_csv}\n')
 
 
-def simulation_step(index):
-    print(f'starting iteration {index}')
-    csv_output = list()
-    for maxpool in [3, 5, 10, 20, 30, 40]:
-        for nrep in [1, 2, 3, 4, 5]:
-            for p in np.arange(0.01, 0.3, 0.01):
-                # WARNING: THIS IS UNTESTED with the new code.
-                pool_log = set_up_pools(npools, nsamples, maxpool, nreplicates)
-                positive_pools, positive_samples = simulate_pools(
-                                                        pool_log, nsamples, p)
-                sample_map = make_sample_map(pool_log)
-                samples, states = resolve_samples(
-                        pool_log, sample_map, positive_pools, nsamples, npools)
-                    #npools=94, nreplicates=nrep, maxpool=maxpool, p=p)
-                # spr .. samples per reactions
-                #out.write(f'{index},{maxpool},{nrep},{p},{samples}\n')
-                csv_output.append(f'{index},{maxpool},{nrep},{p},{samples}\n')
-    return csv_output
-
-
+# EOF
