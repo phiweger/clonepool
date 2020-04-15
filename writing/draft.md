@@ -103,9 +103,9 @@ $s_{e} = \frac{s_{m}}{p + s}$.
 The clonepool algorithm first distributes all sample replicates randomly
 across the available pools, with the limitation that a sample's replicates do
 not co-occur in the same pool. After the pools have been tested, the algorithm
-tries to resolve the samples' status in two iterations: In a first iteration,
+attempts to resolve the samples' status in two phases: In a first phases,
 all samples that have at least one replicate in a negative pool are marked
-negative. In the second iteration, samples that only occur in positive pools
+negative. In the second phase, samples that only occur in positive pools
 and where at least one replicate is in a pool where all other samples are
 negative, are marked positive (red, orange). All other samples cannot be
 resolved, and need to be retested individually. The longer the set of pools a
@@ -114,8 +114,8 @@ samples can be resolved given a particular prevalence.
 
 ![Illustration of the clonepool algorithm. Positive pools (circles) are marked
 grey, negative ones in white. Samples are depicted as squares, positive ones
-with a "+". In a first iteration, all samples that have at least one replicate
-in a negative pool are marked negative (blue, green). In the second iteration,
+with a "+". In a first phase, all samples that have at least one replicate
+in a negative pool are marked negative (blue, green). In the second phase,
 samples that only occur in positive pools and where at least one replicate is
 in a pool where all other samples are negative, are marked positive (red,
 orange). All other samples cannot be resolved and have to be retested
