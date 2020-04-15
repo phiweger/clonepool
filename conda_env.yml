@@ -9,5 +9,6 @@ dependencies:
   - networkx
   - numpy
   - tqdm
+  - r
   - r-readr
   - r-ggplot2
