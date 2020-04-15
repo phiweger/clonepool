@@ -6,6 +6,7 @@ from itertools import combinations
 
 import networkx as nx
 import numpy as np
+import clonepool.globalopts as opt
 
 
 def set_up_pools(npools, nsamples, maxpool, nreplicates):
@@ -152,7 +153,8 @@ def eprint(*args, **kwargs):
     Behaves exactly like regular print(), but prints to STDERR.
     Cf. https://stackoverflow.com/a/14981125
     '''
-    print(*args, file=sys.stderr, **kwargs)
+    if opt.verbose:
+        print(*args, file=sys.stderr, **kwargs)
 
 
 def get_false_pos_neg_rates(sample_state, true_pos_samples):
