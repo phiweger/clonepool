@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 library(ggplot2)
 library(readr)
 
@@ -8,7 +10,7 @@ df <- read_csv('sim.csv')
 ggplot(
     df[(df$prevalence <= 0.1) & (df$replicates <= 4),],
     aes(x=as.factor(prevalence), y=effective_samples, color=as.factor(replicates))) +
-    
+
     geom_boxplot(outlier.shape=NA, lwd=0.3) +
     scale_color_brewer(palette='Set2') +
     facet_wrap(~pool_size, nrow=2) +
@@ -21,7 +23,7 @@ ggplot(
     ylab('resolved samples per reaction') +
     xlab('prevalence') +
     labs(color='replicates')
-    
+
 
 ggsave('sim.pdf', width=16, height=12, units='cm')
 ggsave('sim.png', width=16, height=12, units='cm')
