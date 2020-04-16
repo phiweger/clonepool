@@ -50,7 +50,7 @@ retesting of samples that cannot be resolved in the first pooling run.
 ## Install and run
 
 ```bash
-git clone https://github.com/phiweger/clonepool
+git clone https://github.com/phiweger/clonepool.git
 cd clonepool
 
 conda env create --file conda_env.yml
