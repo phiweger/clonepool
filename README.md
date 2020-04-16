@@ -1,36 +1,51 @@
 # clonepool
 
-Increasing screening capacity for SARS-CoV-2 RT-PCR using pool addresses
+## Increased PCR screening capacity using a multi-replicate pooling scheme
 
-## Abstract
+Adrian Viehweger (1, 4, \*), Felix Kühnl (2, \*), Christian Brandt (3, 4), Brigitte König (1)
 
-Screening large sample collections for SARS-CoV-2 enables effective public
-health response to restrict the spread of the virus. However, in most
-laboratories the capacity is limited by the number of reactions any laboratory
-can perform. Thus, it is desirable to maximize the number of samples that can
-be tested, while minimizing the number of reactions required to do so.
+\* These authors contributed equally.
 
-Here we report a protocol for pooling samples that increases the number of
-samples that can be processed compared to one-sample-per-tube testing by
-multiples. This is achieved through the newly introduced concept of a _pool
-address_: Each sample is present in multiple pools, which allows resolution of
-the testing status even though it has not been tested individually. Target
-prevalence and the desired pool size determine which address length is
-optimal. This pooling protocol allows pooling to be effective even at a high
-target prevalence where previous approaches become ineffective.
+(1) Medical Microbiology, University Hospital Leipzig  
+(2) Bioinformatics, University Leipzig  
+(3) Infection Medicine, University Hospital Jena  
+(4) [nanozoo](http://www.nanozoo.org/) GmbH, Leipzig
 
-In the figure below this becomes apparent: Compared to the classical
-one-by-one approach (horizontal black line) and naive x-samples-per-pool
-approach (green), pooled replicates are more efficient at higher target
-prevalence. Because at a higher prevalence more pools become positive, many
-samples need one-by-one retesting. If a sample is present in multiple pools,
-the combinatorics of the pools being positive or negative can inform about the
-sample's state. For this, replicates are randomly distributed accross pools.
-We simulate the procedure for up to five replicates per sample (color points).
-The effective number of processable samples depends the target prevalence
-(x-axis) and desired maximum pool size (facets). For example, using two pooled
-replicates becomes more effective than putting each sample in only one pool
-(of size three) at a prevalence of about 0.15.
+
+### Abstract
+
+Effective public health response to viral outbreaks such as SARS-CoV-2 is
+often informed by real-time PCR screening of large populations. Pooling
+samples can increase screening capacity. However, when a traditional pool is
+tested positive, all samples in the pool need individual retesting, which
+becomes ineffective at a higher proportion of positive samples. Here, we
+report a new pooling protocol that mitigates this problem by replicating
+samples across multiple pools. The resulting pool set allows the sample
+status to be resolved more often than with traditional pooling. At 2%
+prevalence and 20 samples per pool, our protocol increases screening capacity
+by factors of 5 and 2 compared to individual testing and traditional pooling,
+respectively. The corresponding software to layout and resolve samples is
+freely available under a BSD license (https://github.com/phiweger/clonepool).
+
+Figure 1: Illustration of the clonepool algorithm. Circles denote the wells, each
+containing a pool of samples (small squares). A distinct color marks all
+replicates of a single sample. Positive samples are flagged with
+"+", negative ones remain empty. Positive pools are shaded in grey, negative ones in
+white.  In a first phase, all samples that have at least one replicate in a
+negative pool are identified as negative (blue, green). In the second phase,
+samples that only occur in positive pools and where at least one replicate is
+in a pool where all other samples are negative, are recognized as positive
+(red, orange). All other samples cannot be resolved and have to be retested
+individually (yellow).
+
+![](img/protocol.png)
+
+Figure 2: Simulation results for different percentages of positive samples (x-axis),
+replicates (colors), and pool sizes (panels). The target metric is the
+effective number of samples per PCR reaction, which includes the individual
+retesting of samples that cannot be resolved in the first pooling run.
+
+![](img/sim.png)
 
 ## Install and run
 
@@ -51,5 +66,5 @@ clonepool simulate -l test/layout.csv test/simulation.csv
 clonepool resolve --layout test/simulation.csv test/results.csv
 ```
 
-![](scripts/sim.png)
+![](img/sim.png)
 
