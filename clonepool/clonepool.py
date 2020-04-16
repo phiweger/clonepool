@@ -1,8 +1,5 @@
-#!/usr/bin/env python3
+# clonepool/clonepool.py
 
-'''
-Address len 1 means w fully connected graphs
-'''
 from collections import defaultdict
 import sys
 
@@ -19,33 +16,6 @@ from clonepool.utils import (
     read_layout_file,
     write_layout_file,
 )
-
-
-##############################################################################
-##                                   Main                                   ##
-##############################################################################
-
-
-# Compute layoutput in parallel.
-# for i in tqdm(range(25)):
-
-'''
-csv_layoutput = list()
-cpu_count = None                # use None to autodetect, and 1 to debug
-with ProcessPoolExecutor(max_workers=cpu_count) as executor:
-    iter_count = 24
-    print(f'Executing {iter_count} simulation iterations ...')
-    for csv_layoutput_of_run in executor.map(simulation_step, range(iter_count)):
-    # for i in range(iter_count):                   # use for debugging
-    #     csv_layoutput_of_run = simulation_step(i)
-        csv_layoutput.extend(csv_layoutput_of_run)
-
-# Write layoutput to csv file.
-print('Writing layoutput ... ',)
-with open('sim.csv', 'w+') as layout:
-    layout.write("".join(csv_layoutput))
-print('done.')
-'''
 
 
 @click.command()
@@ -69,13 +39,14 @@ def layout(pool_size, pool_count, replicates, samples, layout_file):
 
     Writes to STDOUT or the given layout file.
     '''
+    # Check if sample count is valid.
     max_sample_support = int(np.floor((pool_size * pool_count) / replicates))
-
-    if samples:
-        assert samples <= max_sample_support, \
-        f'The chosen parameters support a maximum of {max_sample_support} samples'
-    else:
+    if not samples:
         samples = max_sample_support
+    else:
+        if samples > max_sample_support:
+            sys.exit( 'ERROR: The chosen parameters support a maximum of '
+                     f'{max_sample_support} samples')
 
     # Generate pool layout and write it to output file.
     pool_log       = set_up_pools(pool_count, samples, pool_size, replicates)
@@ -125,9 +96,6 @@ def simulate(layout, prevalence, false_positives, false_negatives, out_layout_fi
 @click.option(
     '--layout', '-l', required=True, type=click.File('r'),
     help='Path to layout file containing +/- pool results')
-# @click.option(
-#     '--result', default=None,
-#     help='Path to +/- sample results file')
 @click.argument(
     'sample_results_file', required=False, default='-', type=click.File('w'))
 def resolve(layout, sample_results_file):
@@ -159,29 +127,4 @@ def resolve(layout, sample_results_file):
         state_symbol = '+' if state == +1 else '-' if state == -1 else 'NA'
         sample_results_file.write(f'{sample}\t{state_symbol}\n')
 
-
-# if __name__ == '__main__':
-#     laylayout()
-
-
-# Plot data using R / GGplot
-'''r
-library(ggplot2)
-library(readr)
-
-df <- read_csv('sim.csv', col_names=c('iter', 'maxpool', 'nrep', 'p', 'spr'))
-
-ggplot(df, aes(x=p, y=spr, color=as.factor(nrep))) +
-    geom_jitter(size=0.3) +
-    scale_color_brewer(palette='Set2') +
-    facet_wrap(~maxpool, scale='free_y') +
-    theme_classic() +
-    geom_hline(yintercept=1) +
-    ylab('resolved samples per reaction') +
-    xlab('prevalence') +
-    labs(color='replicates') +
-    guides(color=guide_legend(override.aes=list(size=10)))
-
-ggsave('sim.pdf', width=12, height=10, units='cm')
-'''
-
+# EOF
