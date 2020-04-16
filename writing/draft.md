@@ -33,7 +33,7 @@ pandoc -s --pdf-engine=xelatex -f markdown -t latex -o draft.pdf draft.md --bibl
 -->
 
 
-## Increased PCR screening capacity using pool addresses
+## Increased PCR screening capacity using a multi-replicate pooling scheme
 
 Adrian Viehweger $^{1, 4}$ \*, Felix Kühnl $^2$ \*, Christian Brandt $^{3, 4}$, Brigitte König $^1$
 
@@ -56,7 +56,7 @@ samples can increase screening capacity. However, when a traditional pool is
 tested positive, all samples in the pool need individual retesting, which
 becomes ineffective at a higher proportion of positive samples. Here, we
 report a new pooling protocol that mitigates this problem by replicating
-samples across multiple pools. The resulting "pool address" allows the sample
+samples across multiple pools. The resulting pool set allows the sample
 status to be resolved more often than with traditional pooling. At 2%
 prevalence and 20 samples per pool, our protocol increases screening capacity
 by factors of 5 and 2 compared to individual testing and traditional pooling,
@@ -86,7 +86,7 @@ renders traditional pooling ineffective. To mitigate this, we propose to test sa
 replicates and distribute them across multiple pools. The resulting "pool
 address" can then be used to resolve samples in one pool, given the information
 from other pools that contain a replicate. While some previous studies have
-taken a similar approach implicitly [@@Sinnott-Armstrong2020-yb], it has
+taken a similar approach implicitly [@Sinnott-Armstrong2020-yb], it has
 neither been investigated systematically for more replicates than two, nor is
 there any software that would generate and resolve the corresponding pooling
 layout for laboratory use.
@@ -109,7 +109,7 @@ negative. In the second phase, samples that (a) only occur in positive pools,
 and (b) have at least one replicate in a pool in which all other samples are
 known to be negative, are marked positive (red, orange). All other samples
 cannot be resolved, and need to be retested individually. The longer the set
-of pools a sample is distributed across, i.e., the longer its "pool address",
+of pools a sample is distributed across, i.e., the larger its pool set,
 the more samples can be resolved given a particular prevalence. Of course, a
 higher number of replicates comes at the price of a reduced number of samples
 which can be processed at a fixed number of wells. Fortunately, our results
@@ -118,8 +118,8 @@ parameters.
 
 ![Illustration of the clonepool algorithm. Circles denote the wells, each
 containing a pool of samples (small squares). A distinct color marks all
-replicates of a single sample. Positive and negative samples are flagged with
-"+" or "-", respectively.  Positive pools are shaded in grey, negative ones in
+replicates of a single sample. Positive samples are flagged with
+"+", negative ones remain empty. Positive pools are shaded in grey, negative ones in
 white.  In a first phase, all samples that have at least one replicate in a
 negative pool are identified as negative (blue, green). In the second phase,
 samples that only occur in positive pools and where at least one replicate is
