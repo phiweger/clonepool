@@ -9,7 +9,7 @@ Adrian Viehweger (1, 4, \*), Felix Kühnl (2, \*), Christian Brandt (3, 4), Brig
 (1) Medical Microbiology, University Hospital Leipzig  
 (2) Bioinformatics, University Leipzig  
 (3) Infection Medicine, University Hospital Jena  
-(4) [nanozoo](www.nanozoo.org) GmbH, Leipzig
+(4) [nanozoo](http://www.nanozoo.org/) GmbH, Leipzig
 
 
 ### Abstract
