@@ -2,17 +2,14 @@
 
 ## Increased PCR screening capacity using a multi-replicate pooling scheme
 
-Adrian Viehweger $^{1, 4}$ \*, Felix Kühnl $^2$ \*, Christian Brandt $^{3, 4}$, Brigitte König $^1$
+Adrian Viehweger (1, 4, \*), Felix Kühnl (2, \*), Christian Brandt (3, 4), Brigitte König (1)
 
 \* These authors contributed equally.
 
-$^1$ Medical Microbiology, University Hospital Leipzig
-
-$^2$ Bioinformatics, University Leipzig
-
-$^3$ Infection Medicine, University Hospital Jena
-
-$^4$ nanozoo GmbH, Leipzig
+(1) Medical Microbiology, University Hospital Leipzig  
+(2) Bioinformatics, University Leipzig  
+(3) Infection Medicine, University Hospital Jena  
+(4) [nanozoo](www.nanozoo.org) GmbH, Leipzig
 
 
 ### Abstract
@@ -30,7 +27,7 @@ by factors of 5 and 2 compared to individual testing and traditional pooling,
 respectively. The corresponding software to layout and resolve samples is
 freely available under a BSD license (https://github.com/phiweger/clonepool).
 
-![Illustration of the clonepool algorithm. Circles denote the wells, each
+Figure 1: Illustration of the clonepool algorithm. Circles denote the wells, each
 containing a pool of samples (small squares). A distinct color marks all
 replicates of a single sample. Positive samples are flagged with
 "+", negative ones remain empty. Positive pools are shaded in grey, negative ones in
@@ -39,13 +36,16 @@ negative pool are identified as negative (blue, green). In the second phase,
 samples that only occur in positive pools and where at least one replicate is
 in a pool where all other samples are negative, are recognized as positive
 (red, orange). All other samples cannot be resolved and have to be retested
-individually (yellow).](img/protocol.png)
+individually (yellow).
 
-![Simulation results for different percentages of positive samples (x-axis),
+![](img/protocol.png)
+
+Figure 2: Simulation results for different percentages of positive samples (x-axis),
 replicates (colors), and pool sizes (panels). The target metric is the
 effective number of samples per PCR reaction, which includes the individual
 retesting of samples that cannot be resolved in the first pooling run.
-](img/sim.png)
+
+![](img/sim.png)
 
 ## Install and run
 
