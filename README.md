@@ -27,41 +27,67 @@ by factors of 5 and 2 compared to individual testing and traditional pooling,
 respectively. The corresponding software to layout and resolve samples is
 freely available under a BSD license (https://github.com/phiweger/clonepool).
 
-Figure 1: Illustration of the clonepool algorithm. Circles denote the wells, each
-containing a pool of samples (small squares). A distinct color marks all
-replicates of a single sample. Positive samples are flagged with
-"+", negative ones remain empty. Positive pools are shaded in grey, negative ones in
-white.  In a first phase, all samples that have at least one replicate in a
-negative pool are identified as negative (blue, green). In the second phase,
-samples that only occur in positive pools and where at least one replicate is
-in a pool where all other samples are negative, are recognized as positive
-(red, orange). All other samples cannot be resolved and have to be retested
+Figure 1: Illustration of the clonepool algorithm. Circles denote the wells,
+each containing a pool of samples (small squares). A distinct color marks all
+replicates of a single sample. Positive samples are flagged with "+", negative
+ones remain empty. Positive pools are shaded in grey, negative ones in white.
+In a first phase, all samples that have at least one replicate in a negative
+pool are identified as negative (blue, green). In the second phase, samples
+that only occur in positive pools and where at least one replicate is in a
+pool where all other samples are negative, are recognized as positive (red,
+orange). All other samples cannot be resolved and have to be retested
 individually (yellow).
 
 ![](img/protocol.png)
 
-Figure 2: Simulation results for different percentages of positive samples (x-axis),
-replicates (colors), and pool sizes (panels). The target metric is the
-effective number of samples per PCR reaction, which includes the individual
-retesting of samples that cannot be resolved in the first pooling run.
+Figure 2: Simulation results for different percentages of positive samples
+(x-axis), replicates (colors), and pool sizes (panels). The target metric is
+the effective number of samples per PCR reaction, which includes the
+individual retesting of samples that cannot be resolved in the first pooling
+run.
 
 ![](img/sim.png)
 
-## Install and run
+## Webservice
+
+clonepool is available as an interactive
+[Google Colaboratory notebook](https://colab.research.google.com/github/phiweger/clonepool/blob/master/clonepool.ipynb),
+which can be used without installing any code locally.
+
+
+## Installation
+
+We recommend using Conda to provide an environment for clonepool and its
+dependencies.
+[Miniconda](https://docs.conda.io/en/latest/miniconda.html) is a minimal
+installer for Conda.
 
 ```bash
+# Check out the code from the Git repository.
 git clone https://github.com/phiweger/clonepool.git
 cd clonepool
 
+# Create a Conda environment including all dependencies.
 conda env create --file conda_env.yml
 conda activate clonepool
 
-pip install -e .
+# Install clonepool.
+pip install .
+```
+
+## Example run
+
+
+```bash
+# Make sure the Conda environment is active.
+conda activate clonepool
 
 # Generate layout ...
 clonepool layout -n 235 -P 5 test/layout.csv
+
 # and add positive pools after experiment (- -> +) or simulate experiment.
 clonepool simulate -l test/layout.csv test/simulation.csv
+
 # Finally, resolve which samples are positive, negative or incertain (NA).
 clonepool resolve --layout test/simulation.csv test/results.csv
 ```
