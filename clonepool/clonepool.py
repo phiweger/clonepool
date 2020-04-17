@@ -49,7 +49,7 @@ def layout(pool_size, pool_count, replicates, samples, layout_file):
                      f'{max_sample_support} samples')
 
     # Generate pool layout and write it to output file.
-    pool_log       = set_up_pools(pool_count, samples, pool_size, replicates)
+    pool_log       = set_up_pools(pool_count, samples, replicates)
     write_layout_file(layout_file, pool_log)
 
 
@@ -81,7 +81,7 @@ def simulate(layout, prevalence, false_positives, false_negatives, out_layout_fi
 
     # Find number of samples
     nsamples = 1 + max(
-                [max(pool_samples) for pool_samples in pool_log.values()])
+                [max(pool_samples) for pool_samples in pool_log])
 
     # Sample new positive pools.
     positive_pools, positive_samples = simulate_pools(

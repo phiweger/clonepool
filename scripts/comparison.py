@@ -28,12 +28,12 @@ def one_test_run(replicates, pool_size, prevalence):
 
     samples = int(np.floor((pool_size * pool_count) / replicates))
 
-    pool_log = set_up_pools(pool_count, samples, pool_size, replicates)
+    pool_log = set_up_pools(pool_count, samples, replicates)
     positive_pools = set()              # none positive
 
-
+    # Find number of samples
     nsamples = 1 + max(
-            [max(pool_samples) for pool_samples in pool_log.values()])
+            [max(pool_samples) for pool_samples in pool_log])
 
     # Sample new positive pools.
     positive_pools = simulate_pools(

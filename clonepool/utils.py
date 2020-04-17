@@ -6,32 +6,64 @@ from itertools import combinations
 
 import networkx as nx
 import numpy as np
+from more_itertools import partition
 import clonepool.globalopts as opt
 
 
-def set_up_pools(npools, nsamples, maxpool, nreplicates):
-    pool_cnt = {k: maxpool for k in np.arange(0, npools)} # how often each pool
-    pool_log = defaultdict(set)                # which sample in which pool?
+def set_up_pools(npools, nsamples, nreplicates):
+    pool_size    = int(np.ceil(nsamples * nreplicates / npools))
+    pool_cnt     = [pool_size] * npools           # count free slots per pool
+    pool_cnt_sum =  pool_size  * npools
+    pool_idx     = list(range(npools))            # [0, ..., npools-1]
+    pool_probs   = [0] * npools                   # init list of length npools
+    pool_log     = [set() for _ in range(npools)] # which sample in which pool?
 
-    for i in range(nsamples):
-        try:
+    try:
+        for sample in range(nsamples):
+            # Weigh pools by number of free sample slots.
+            # Obtain probs for each pool by dividing by total # of free slots.
+            for pool, count in enumerate(pool_cnt):
+                pool_probs[pool] = count / pool_cnt_sum
+
+            # Choose nreplicates many distinct pool.
             address = np.random.choice(
-                list(pool_cnt.keys()), nreplicates, replace=False)
+                pool_idx, nreplicates, replace=False, p=pool_probs)
 
+            # Reduce free slots for chosen pools and add samples to pool_log.
             for pool in address:
+                pool_cnt[pool] -= 1         # once 0, it wont be sampled again
+                pool_log[pool].add(sample)
+
+            pool_cnt_sum -= nreplicates     # update sum of free slots
+
+    except ValueError:
+        # We had bad luck with sampling, there are less than nreplicates
+        # many non-full pools (but we do have enough slots in the remaining
+        # pools!).
+        nonfull_pools, full_pools = [set(iter) for iter in partition(
+                                     lambda i: pool_cnt[i]==0, pool_idx)]
+
+        # Process all remaining samples.
+        for sample in range(sample, nsamples):
+            nnon_full = len(nonfull_pools)
+
+            # Take as many non-full pools as we have, and add as many full
+            # pools as neccessary to get enough replicates.
+            address = list(nonfull_pools) + list(np.random.choice(
+                    list(full_pools), nreplicates-nnon_full, replace=False))
+
+            # Add samples to pool_log as above.
+            for pool in address:
+                pool_log[pool].add(sample)
+
+            # Book-keeping: keep track of new full pools.
+            new_full_pools = set()
+            for pool in nonfull_pools:
                 pool_cnt[pool] -= 1
-                if pool_cnt[pool] == 0:
-                    del pool_cnt[pool]
-
-        except ValueError:
-            # Cannot take a larger sample than population when 'replace=False'
-            # Then random
-            address = np.random.choice(
-                list(np.arange(0, npools)), size=nreplicates, replace=False)
-            # consequence: some pools are larger than maxpool
-
-        for pool in address:
-            pool_log[pool].add(i)
+                if pool_cnt[pool] == 0:         # pool is now full
+                    new_full_pools.add(pool)
+            full_pools.update(new_full_pools)
+            nonfull_pools -= new_full_pools
 
     return pool_log
 
@@ -69,7 +101,7 @@ def get_pos_pools(sample_map, positive_samples):
 
 def make_sample_map(pool_log):
     sample_map = defaultdict(set)
-    for pool, samples in pool_log.items():
+    for pool, samples in enumerate(pool_log):
         for sample in samples:
             sample_map[sample].add(pool)
     return sample_map
@@ -80,14 +112,14 @@ def resolve_samples(pool_log, sample_map, positive_pools, nsamples, npools):
     sample_state = {sample: 0 for sample in sample_map}
 
     # First, mark all samples from negative pools as negative.
-    for pool, samples in pool_log.items():
+    for pool, samples in enumerate(pool_log):
         if pool not in positive_pools:
             for sample in samples:
                 sample_state[sample] = -1  # negative
 
     # Now, detect positives: only possible if exactly one sample in the pool
     # is uncertain and all others are negative.
-    for pool, samples in pool_log.items():
+    for pool, samples in enumerate(pool_log):
         if pool in positive_pools:
             uncertain_samples = [s for s in samples if sample_state[s] != -1]
             if len(uncertain_samples) == 1:
@@ -195,7 +227,7 @@ def read_layout_file(layout_file):
     samples does each pool contain?) as well as the sets of positive pools
     (with state '+') and positive samples (marked with a star '*').
     '''
-    pool_log       = {}                     # pool: [samples]
+    pool_log       = []                     # pool: [samples]
     pos_pools   = set()
     pos_samples = set()
 
@@ -216,7 +248,7 @@ def read_layout_file(layout_file):
         if state == '+':
             pos_pools.add(pool)
 
-        pool_log[pool] = set(samples)
+        pool_log.append( set(samples) )
 
     return pool_log, pos_pools, pos_samples
 
@@ -233,7 +265,7 @@ def write_layout_file(layout_file, pool_log, pos_pools=set(), pos_samples=set())
     layout_file.write('pool\tresult\tsamples\n')        # write header line
 
     # Write sorted list of pools, samples, and state.
-    for pool, samples in sorted(pool_log.items()):
+    for pool, samples in enumerate(pool_log):
         state = '+' if (pool in pos_pools) else '-'
         # Sort samples and add a '*' to positive ones.
         samples_starred = [(str(i)+'*' if i in pos_samples else str(i))
