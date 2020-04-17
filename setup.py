@@ -34,6 +34,7 @@ setup(
         'networkx',
         'numpy',
         'tqdm',
+        'more-itertools',
     ],  # Optional
 
     # If there are data files included in your packages that need to be
