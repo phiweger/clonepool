@@ -8,11 +8,6 @@ def run_prog_cmd_help(cmd):
     completed = run(['clonepool', cmd, '--help'])
     assert completed.returncode == 0
 
-def test_layout():
-    run_prog_cmd_help('layout')
-
-def test_simulate():
-    run_prog_cmd_help('simulate')
-
-def test_resolve():
-    run_prog_cmd_help('resolve')
+@pytest.mark.parametrize("cmd", ['layout', 'simulate', 'resolve'])
+def test_cmd_help(cmd):
+    run_prog_cmd_help(cmd)
