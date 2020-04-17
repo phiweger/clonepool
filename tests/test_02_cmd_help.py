@@ -5,7 +5,8 @@ import pytest
 from subprocess import run
 
 def run_prog_cmd_help(cmd):
-    run(['clonepool', cmd, '--help'])
+    completed = run(['clonepool', cmd, '--help'])
+    assert completed.returncode == 0
 
 def test_layout():
     run_prog_cmd_help('layout')

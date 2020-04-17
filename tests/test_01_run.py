@@ -5,4 +5,5 @@ import pytest
 from subprocess import run
 
 def test_prog_help():
-    run(['clonepool',  '--help'])
+    completed = run(['clonepool',  '--help'])
+    assert completed.returncode == 0
