@@ -35,7 +35,7 @@ pandoc -s --pdf-engine=xelatex -f markdown -t latex -o draft.pdf draft.md --bibl
 
 ## Increased PCR screening capacity using a multi-replicate pooling scheme
 
-Adrian Viehweger $^{1, 4}$ \*, Felix Kühnl $^2$ \*, Christian Brandt $^{3, 4}$, Brigitte König $^1$
+Adrian Viehweger $^{1, 4}$ \* (c), Felix Kühnl $^2$ \*, Christian Brandt $^{3, 4}$, Brigitte König $^1$
 
 \* These authors contributed equally.
 
@@ -47,21 +47,12 @@ $^3$ Infection Medicine, University Hospital Jena
 
 $^4$ nanozoo GmbH, Leipzig
 
+(c) Corresponding author: adrian@nanozoo.org
+
 
 ### Abstract
 
-Effective public health response to viral outbreaks such as SARS-CoV-2 is
-often informed by real-time PCR screening of large populations. Pooling
-samples can increase screening capacity. However, when a traditional pool is
-tested positive, all samples in the pool need individual retesting, which
-becomes ineffective at a higher proportion of positive samples. Here, we
-report a new pooling protocol that mitigates this problem by replicating
-samples across multiple pools. The resulting pool set allows the sample
-status to be resolved more often than with traditional pooling. At 2%
-prevalence and 20 samples per pool, our protocol increases screening capacity
-by factors of 5 and 2 compared to individual testing and traditional pooling,
-respectively. The corresponding software to layout and resolve samples is
-freely available under a BSD license (https://github.com/phiweger/clonepool).
+Effective public health response to viral outbreaks such as SARS-CoV-2 is often informed by real-time PCR screening of large populations. Pooling samples can increase screening capacity. However, when a traditional pool is tested positive, all samples in the pool need individual retesting, which becomes ineffective at a higher proportion of positive samples. Here, we report a new pooling protocol that mitigates this problem by replicating samples across multiple pools. The resulting pool set allows the sample status to be resolved more often than with traditional pooling. At 2% prevalence and 20 samples per pool, our protocol increases screening capacity by factors of 5 and 2 compared to individual testing and traditional pooling, respectively. The corresponding software to layout and resolve samples is freely available under a BSD license (https://github.com/phiweger/clonepool).
 
 
 \newpage
@@ -125,7 +116,7 @@ negative pool are identified as negative (blue, green). In the second phase,
 samples that only occur in positive pools and where at least one replicate is
 in a pool where all other samples are negative, are recognized as positive
 (red, orange). All other samples cannot be resolved and have to be retested
-individually (yellow).](../img/protocol.pdf){#fig:protocol}
+individually (yellow).](../img/protocol.png){#fig:protocol}
 
 We tested the proposed clonepool algorithm using simulated data. We assumed no
 pipetting errors, which can be achieved, e.g., through the use of a pipetting

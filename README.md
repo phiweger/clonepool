@@ -83,13 +83,13 @@ pip install .
 conda activate clonepool
 
 # Generate layout ...
-clonepool layout -n 235 -P 5 test/layout.csv
+clonepool layout -P 5 data/layout.csv
 
 # and add positive pools after experiment (- -> +) or simulate experiment.
-clonepool simulate -l test/layout.csv test/simulation.csv
+clonepool simulate -l data/layout.csv data/simulation.csv
 
 # Finally, resolve which samples are positive, negative or incertain (NA).
-clonepool resolve --layout test/simulation.csv test/results.csv
+clonepool resolve --layout data/simulation.csv data/results.csv
 ```
 
 ![](img/sim.png)
