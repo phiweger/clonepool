@@ -25,6 +25,7 @@ header-includes:
 - \doublespacing
 - \usepackage[left]{lineno}
 - \linenumbers
+
 ---
 
 
@@ -186,8 +187,9 @@ In conclusion, our pooling protocol based on sample replicates can
 substantially increase the number of samples per PCR reaction when screening
 large populations during pathogen outbreaks, such as SARS-CoV-2. The protocol
 can be tuned to local laboratory conditions such as pool size and proportion
-of positive samples. The accompanying software supports the protocol's
-implementation and routine use.
+of positive samples. Also, subsequent testing of positive pools could be made more efficient by splitting pools iteratively [@Eberhardt2020-wc].
+
+The clonepool software supports the protocol's implementation for routine use ([https://github.com/phiweger/clonepool](https://github.com/phiweger/clonepool)). 
 
 
 \newpage
