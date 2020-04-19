@@ -4,7 +4,9 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - python>=3.7
+  - python=3.8
+  - tox
+  - pytest
   - click
   - networkx
   - numpy
