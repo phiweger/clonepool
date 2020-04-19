@@ -11,6 +11,7 @@ dependencies:
   - networkx
   - numpy
   - tqdm
+  - more-itertools
   - r
   - r-readr
   - r-ggplot2
