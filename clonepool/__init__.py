@@ -1,5 +1,7 @@
 import os
 
+# Import API.
+from clonepool.clonepool import layout, simulate, resolve
 
 # https://docs.pytest.org/en/latest/goodpractices.html
 name = 'clonepool'
