@@ -67,3 +67,18 @@ def resolve_cli(layout, sample_results_file):
     Writes to STDOUT or the given results file.
     '''
     resolve(layout, sample_results_file)
+
+
+##### Set up command line interface commands.
+
+# Do not sort the command list alphabetically, but use order in which commands
+# are added.
+class UnsortedGroup(click.Group):
+    def list_commands(self, ctx):
+        return self.commands
+
+cli = UnsortedGroup()
+
+cli.add_command(layout_cli)
+cli.add_command(simulate_cli)
+cli.add_command(resolve_cli)
